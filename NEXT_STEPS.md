@@ -46,13 +46,13 @@ Pick one of these. **git clone is preferred** — it copies exactly the tracked 
 (no `.venv`, no `__pycache__`, no `.lan_addresses.md`, since all are gitignored) and
 updates later are a one-line `git pull`.
 
-**Option A — git clone (preferred).** Repo is private (`cocteau834/homelab-assistant`),
+**Option A — git clone (preferred).** Repo is private (`wintermute834/homelab-assistant`),
 so the target needs read access. Easiest is the GitHub CLI; an HTTPS token or deploy key
 also works.
 ```bash
 # one-time on the target, if gh isn't set up:
 gh auth login                      # or use a token / SSH deploy key instead
-gh repo clone cocteau834/homelab-assistant ~/homelab-shim
+gh repo clone wintermute834/homelab-assistant ~/homelab-shim
 cd ~/homelab-shim
 ```
 To update the shim on a later change, just: `cd ~/homelab-shim && git pull`.
