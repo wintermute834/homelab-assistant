@@ -38,12 +38,40 @@ curl -s http://localhost:8765/state | python3 -m json.tool
 
 ## NEXT: Deploy + test shim on rivendell (M2)
 
-User is doing this deploy **manually**. Steps:
+User is doing this deploy **manually**.
 
-1. **Copy files** to rivendell (`shim/` + `requirements.txt`):
-   ```bash
-   scp -r shim requirements.txt rivendell:~/homelab-shim/
-   ```
+### Getting the files onto the target
+
+Pick one of these. **git clone is preferred** — it copies exactly the tracked files
+(no `.venv`, no `__pycache__`, no `.lan_addresses.md`, since all are gitignored) and
+updates later are a one-line `git pull`.
+
+**Option A — git clone (preferred).** Repo is private (`cocteau834/homelab-assistant`),
+so the target needs read access. Easiest is the GitHub CLI; an HTTPS token or deploy key
+also works.
+```bash
+# one-time on the target, if gh isn't set up:
+gh auth login                      # or use a token / SSH deploy key instead
+gh repo clone cocteau834/homelab-assistant ~/homelab-shim
+cd ~/homelab-shim
+```
+To update the shim on a later change, just: `cd ~/homelab-shim && git pull`.
+
+The repo root has more than the shim (docs etc.), but that's harmless — you still only
+*run* `shim/`, and `pip install -r requirements.txt` pulls just what the shim needs.
+
+**Option B — copy only the shim (no git on the target).** Excludes `__pycache__` and the
+shim README so only runtime files land:
+```bash
+rsync -av --exclude='__pycache__' --exclude='README.md' shim requirements.txt rivendell:~/homelab-shim/
+```
+Required runtime files: `shim/__init__.py`, `shim/schema.py`, `shim/collectors.py`,
+`shim/server.py`, and `requirements.txt`. **Never** copy `.venv/` between machines —
+recreate it per-target (next step).
+
+### Then, on the target
+
+1. (files are now in `~/homelab-shim` via Option A or B)
 2. **Set up env on rivendell:**
    ```bash
    cd ~/homelab-shim
