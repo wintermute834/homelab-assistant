@@ -11,8 +11,9 @@ Current status / handoff: `NEXT_STEPS.md` (source of truth for "what's next").
 - **orchestrator** (Mac Mini, not built yet) — polls shims every 60s into SQLite, runs
   alert rules, answers NL queries via Ollama on rivendell.
 
-Machines: **rivendell** (Linux, RTX 5070 Ti, runs Ollama) · **Mac Mini M2** (orchestrator)
-· **ilum** (this WSL2 dev box, where Claude Code runs).
+Fleet (4 machines): **rivendell** (Linux, RTX 5070 Ti, runs Ollama) · **caladan**
+(Ubuntu web-app VM) · **ChibaCity** (Mac Mini M2, orchestrator) · **ilum** (this WSL2
+dev box, where Claude Code runs). Canonical per-machine details: `machines.md`.
 
 ## Run & test the shim
 

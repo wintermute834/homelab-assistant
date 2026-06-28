@@ -1,9 +1,12 @@
 # Next Steps
 
-_Last updated: 2026-06-24_
+_Last updated: 2026-06-28_
 
 ## Where we are
 
+- **Repo is on GitHub** (private): `wintermute834/homelab-assistant`, default branch
+  `main`. LAN addresses kept out via gitignored `.lan_addresses.md`. A son account was
+  added as a collaborator via the web portal.
 - **M1 complete & verified.** The shim is built and runs on the local WSL2 dev box
   (`ilum`). `GET /state` returns schema-valid JSON; `GET /health` returns ok.
 - `gpu` and `services.ollama` correctly degrade to `null` on machines without an
@@ -108,5 +111,6 @@ recreate it per-target (next step).
 
 ## After M2
 
-- M2: shims on all three machines (Mac Mini, Windows box next).
+- M2: shims on the rest of the fleet (now **4 machines** — rivendell, caladan, the Mac
+  Mini `ChibaCity`, and the dev box `ilum`; see `machines.md`).
 - M3: Mac Mini orchestrator — polling loop + SQLite history store.

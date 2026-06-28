@@ -98,8 +98,10 @@ Fields marked `_TODO_` are unconfirmed — fill in as you verify on the real mac
 
 ## Open questions to reconcile
 
-- **Hostname naming.** Spec's system prompt (lines 198-199) uses `mac-mini` and
-  `windows-dev`; usage/memory calls the dev box `ilum`. Pick canonical names here and
-  make the shim + alert config match.
-- **LAN addresses & firewall.** Port 8765 must be reachable on the LAN for the Mac Mini
-  to poll each machine. Fill in addresses once assigned.
+- **Hostname naming.** ✅ Canonical names set here: `rivendell`, `caladan`, `ChibaCity`
+  (the Mac Mini), `ilum` (the dev box). Still TODO: the spec's example system prompt
+  (`project-homelab-assistant.md`, ~lines 198-199) still says `mac-mini` / `windows-dev`
+  — update it (and any future alert config) to match these canonical names.
+- **LAN addresses.** ✅ Recorded in the local `.lan_addresses.md` (gitignored). Firewall:
+  port 8765 must still be reachable on the LAN for the Mac Mini to poll each machine.
+- **caladan TODOs.** GPU VRAM and `Runs / services` (the web apps) still unconfirmed.
