@@ -42,14 +42,19 @@ class Network(BaseModel):
     reachable: bool
 
 
-class OllamaService(BaseModel):
+class Model(BaseModel):
+    name: str
+    status: str  # unloaded, loading, loaded, sleeping
+    has_vision: bool
+
+
+class LlamaCppService(BaseModel):
     running: bool
-    models_available: list[str]  # installed on disk (Ollama /api/tags)
-    models_loaded: list[str]  # currently resident in memory (Ollama /api/ps)
+    models: list[Model]
 
 
 class Services(BaseModel):
-    ollama: OllamaService | None = None
+    llama_cpp: LlamaCppService | None = None
 
 
 class Snapshot(BaseModel):
