@@ -69,8 +69,8 @@ Examples:
    ┌──────▼─────┐ ┌────▼─────┐ ┌─────▼──────┐
    │ rivendell  │ │ Mac Mini │ │ Windows PC │
    │            │ │   shim   │ │    shim    │
-   │ shim +     │ │ (self)   │ │            │
-   │ llama LLM  │ └──────────┘ └────────────┘
+   │ shim +     │ │ (self)   │ └────────────┘
+   │ llama LLM  │ └──────────┘
    └────────────┘
 ```
 

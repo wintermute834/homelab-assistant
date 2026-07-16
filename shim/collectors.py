@@ -10,6 +10,7 @@ from __future__ import annotations
 import socket
 import time
 from datetime import datetime, timezone
+from typing import Any
 
 import httpx
 import psutil
@@ -26,7 +27,7 @@ from .schema import (
     Snapshot,
 )
 
-JSON = dict[str, int | float | str | "JSON"] | list[int | float | str | "JSON"]
+JSON = dict[str, int | float | str | Any] | list[int | float | str | Any]
 
 MB = 1024**2
 GB = 1024**3
