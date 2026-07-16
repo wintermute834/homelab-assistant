@@ -9,9 +9,9 @@ Current status / handoff: `NEXT_STEPS.md` (source of truth for "what's next").
 - **shim** (`shim/`) — stateless process on *each* machine. Serves current system state
   as one JSON `Snapshot`. No history, no LLM. Runs unmodified everywhere.
 - **orchestrator** (Mac Mini, not built yet) — polls shims every 60s into SQLite, runs
-  alert rules, answers NL queries via Ollama on rivendell.
+  alert rules, answers NL queries via llama.cpp on rivendell.
 
-Fleet (4 machines): **rivendell** (Linux, RTX 5070 Ti, runs Ollama) · **caladan**
+Fleet (4 machines): **rivendell** (Linux, RTX 5070 Ti, runs llama.cpp) · **caladan**
 (Ubuntu web-app VM) · **ChibaCity** (Mac Mini M2, orchestrator) · **ilum** (this WSL2
 dev box, where Claude Code runs). Canonical per-machine details: `machines.md`.
 
@@ -30,7 +30,7 @@ Local env is `.venv/` in the project root. Bind to LAN only — never expose to 
 - **`schema.py` is the contract.** The `Snapshot` Pydantic models are enforced, not just
   documentation — changes to the payload shape go there first.
 - **Collectors degrade to `null`, never throw.** Absent hardware/services (`gpu`,
-  `services.ollama`) must return `null`, so the shim runs on any machine unchanged.
+  `services.llamacpp`) must return `null`, so the shim runs on any machine unchanged.
 - **`pynvml` is rivendell-only.** It's commented out in `requirements.txt`; the GPU
   collector falls back to `null` when it (or an NVIDIA driver) is missing.
 - **Disk collector filters pseudo-filesystems** (squashfs, overlay, tmpfs, 9p, `/mnt/wsl`,

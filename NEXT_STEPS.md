@@ -9,8 +9,8 @@ _Last updated: 2026-06-28_
   added as a collaborator via the web portal.
 - **M1 complete & verified.** The shim is built and runs on the local WSL2 dev box
   (`ilum`). `GET /state` returns schema-valid JSON; `GET /health` returns ok.
-- `gpu` and `services.ollama` correctly degrade to `null` on machines without an
-  NVIDIA GPU / Ollama (verified on `ilum`).
+- `gpu` and `services.llamacpp` correctly degrade to `null` on machines without an
+  NVIDIA GPU / llama.cpp (verified on `ilum`).
 - Disk filter added: pseudo/virtual filesystems (squashfs, overlay, tmpfs, 9p,
   `/mnt/wsl`, `/snap`, `/var/lib/docker`) and duplicate devices are dropped, so
   `disk[0]` is a real volume and won't false-fire the disk-usage alert.
@@ -25,7 +25,7 @@ home-assistant/
 └── shim/
     ├── __init__.py
     ├── schema.py           # Snapshot contract as Pydantic models (enforced, not just documented)
-    ├── collectors.py       # cpu/mem/disk/gpu/network/ollama collectors; degrade to null when absent
+    ├── collectors.py       # cpu/mem/disk/gpu/network/llamacpp collectors; degrade to null when absent
     ├── server.py           # FastAPI app: GET /state, GET /health
     └── README.md
 ```
@@ -92,7 +92,7 @@ recreate it per-target (next step).
 
 ### Validate in the output (this is the real M2 check)
 - `gpu` → name, `memory_used_mb`, `utilization_percent`, `temperature_c` all populated (NOT null)
-- `services.ollama` → `running: true`; `models_available` lists installed models
+- `services.llamacpp` → `running: true`; `models_available` lists installed models
   (`qwen2.5:3b`, `qwen2.5-coder:14b`). `models_loaded` may be empty if nothing is
   currently resident in memory — that's expected, not a failure.
 - `disk` → real volumes only, no snap/loop noise
@@ -100,7 +100,7 @@ recreate it per-target (next step).
 
 ## Known open questions / likely follow-ups
 
-- **Ollama endpoint choice.** ✅ RESOLVED — `collect_ollama()` now reports both
+- **llama.cpp endpoint choice.** ✅ RESOLVED — `collect_llama()` now reports both
   `models_available` (installed, via `/api/tags`) and `models_loaded` (in memory, via
   `/api/ps`), with `/api/tags` as the liveness signal. M2 should confirm both fields
   look right on rivendell.

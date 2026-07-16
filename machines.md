@@ -17,7 +17,7 @@ Fields marked `_TODO_` are unconfirmed — fill in as you verify on the real mac
 | | |
 |---|---|
 | **Canonical hostname** | `rivendell` |
-| **Role** | Primary compute; runs Ollama (the LLM layer for the whole system) |
+| **Role** | Primary compute; runs llama.cpp (the LLM layer for the whole system) |
 | **OS / platform** | Ubuntu 24.04.4 LTS (GNU/Linux 6.8.0-124-generic x86_64)  |
 | **CPU** | Intel(R) Core(TM) Ultra 7 265KF / 20 processors |
 | **RAM** | 32 GB |
@@ -26,10 +26,10 @@ Fields marked `_TODO_` are unconfirmed — fill in as you verify on the real mac
 | **LAN address** | Check in local .lan_addresses.md file |
 | **Shim port** | 8765 |
 | **Polling interval** | 60 s default (spec notes a shorter interval may be warranted when training jobs run) |
-| **Runs / services** | Ollama — models: `qwen2.5:3b` (default), `qwen2.5-coder:14b` (log/code reasoning) |
+| **Runs / services** | llama.cpp — models: `qwen3.5:3b` (default), `qwen2.5-coder:14b` (log/code reasoning) |
 | **GPU metrics** | `pynvml` installed here **only** — lights up the `gpu` field |
 | **Shim deploy** | **Manual, by the user** — do not ssh/scp on their behalf. Steps in `NEXT_STEPS.md`. |
-| **Shim status** | M2 pending — deploy + verify `gpu`/`ollama` populated |
+| **Shim status** | M2 pending — deploy + verify `gpu`/`llama.cpp` populated |
 | **Notes** | Primary machine; hands-on control preferred. |
 
 ---
@@ -70,7 +70,7 @@ Fields marked `_TODO_` are unconfirmed — fill in as you verify on the real mac
 | **Shim port** | 8765 |
 | **Polling interval** | 60 s (polls itself + the others) |
 | **Runs / services** | Orchestrator daemon (not built yet) + its own shim |
-| **GPU / Ollama** | none — `gpu` and `services.ollama` report `null` |
+| **GPU / llama.cpp** | none — `gpu` and `services.llamacpp` report `null` |
 | **Shim status** | Not yet deployed |
 | **Notes** | The "brain"; everything else reports to it. |
 
@@ -90,7 +90,7 @@ Fields marked `_TODO_` are unconfirmed — fill in as you verify on the real mac
 | **LAN address** | Check in local .lan_addresses.md file |
 | **Shim port** | 8765 |
 | **Polling interval** | 60 s |
-| **Runs / services** | none monitored — `gpu` and `services.ollama` report `null` |
+| **Runs / services** | none monitored — `gpu` and `services.llama.cpp` report `null` |
 | **Shim status** | M1 verified here — `/state` returns schema-valid JSON |
 | **Gotchas** | Stock Python 3.12 had no pip/venv (needed `sudo apt install python3-venv python3-pip`). WSL pollutes `psutil.disk_partitions` with bind-mounts/overlays (some bogusly 100% full) — handled by the disk filter in the shim. |
 

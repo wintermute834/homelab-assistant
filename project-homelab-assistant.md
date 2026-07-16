@@ -23,7 +23,7 @@ Ask the assistant questions about the current state of the infrastructure.
 
 Examples:
 - "Is rivendell's GPU being used right now?"
-- "Which Ollama models are currently loaded?"
+- "Which llama.cpp models are currently loaded?"
 - "What's the disk usage on the NVMe?"
 - "Is the Mac Mini reachable?"
 - "What processes are using the most memory on rivendell?"
@@ -33,7 +33,7 @@ Ask about recent state over time, not just right now.
 
 Examples:
 - "Was rivendell under heavy load last night?"
-- "When did the Ollama service last restart?"
+- "When did the llama.cpp service last restart?"
 - "Has disk usage been climbing this week?"
 
 ### 3. Alert
@@ -51,27 +51,27 @@ Examples:
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│                  Mac Mini M2                    │
-│                                                 │
-│  ┌─────────────────────────────────────────┐   │
-│  │         Orchestration Daemon            │   │
-│  │  - Polls shims on a schedule            │   │
-│  │  - Writes to history store (SQLite)     │   │
-│  │  - Handles user queries via CLI/web     │   │
-│  │  - Routes queries to LLM on rivendell   │   │
-│  │  - Triggers alerts when rules fire      │   │
-│  └─────────────────────────────────────────┘   │
-└──────────────────────┬──────────────────────────┘
+┌───────────────────────────────────────────────┐
+│                  Mac Mini M2                  │
+│                                               │
+│  ┌─────────────────────────────────────────┐  │
+│  │         Orchestration Daemon            │  │
+│  │  - Polls shims on a schedule            │  │
+│  │  - Writes to history store (SQLite)     │  │
+│  │  - Handles user queries via CLI/web     │  │
+│  │  - Routes queries to LLM on rivendell   │  │
+│  │  - Triggers alerts when rules fire      │  │
+│  └─────────────────────────────────────────┘  │
+└──────────────────────┬────────────────────────┘
                        │ LAN (SSH or HTTP)
           ┌────────────┼─────────────┐
           │            │             │
-   ┌──────▼──────┐ ┌───▼────┐ ┌─────▼──────┐
-   │  rivendell  │ │Mac Mini│ │ Windows PC │
-   │             │ │  shim  │ │    shim    │
-   │  shim +     │ │(self)  │ │            │
-   │  Ollama LLM │ └────────┘ └────────────┘
-   └─────────────┘
+   ┌──────▼─────┐ ┌────▼─────┐ ┌─────▼──────┐
+   │ rivendell  │ │ Mac Mini │ │ Windows PC │
+   │            │ │   shim   │ │    shim    │
+   │ shim +     │ │ (self)   │ │            │
+   │ llama LLM  │ └──────────┘ └────────────┘
+   └────────────┘
 ```
 
 ### Components
@@ -86,7 +86,7 @@ The brain of the system. Polls each shim on a schedule, writes results to the hi
 store, listens for user input, constructs prompts from current and historical state,
 calls the LLM on rivendell, and sends alerts when rules fire.
 
-**LLM Layer** (rivendell / Ollama)
+**LLM Layer** (rivendell / llama.cpp)
 `qwen2.5:3b` handles the majority of conversational queries — it's fast and cheap for
 simple factual questions about structured data. `qwen2.5-coder:14b` can be invoked for
 queries that require interpreting logs or reasoning about code-level issues.
@@ -141,10 +141,20 @@ All machines return the same top-level structure; fields that don't apply are nu
     "reachable": true
   },
   "services": {
-    "ollama": {
+    "llama_cpp": {
       "running": true,
-      "models_available": ["qwen2.5:3b", "qwen2.5-coder:14b"],
-      "models_loaded": ["qwen2.5:3b"]
+      "models": [
+        {
+          "name": "Qwen3.5-4B",
+          "status": "loaded",
+          "has_vision": false
+        },
+        {
+          "name": "Qwen3.5-Mythos-9B",
+          "status": "unloaded",
+          "has_vision": true
+        }
+      ],
     }
   },
   "uptime_hours": 48.3
@@ -159,7 +169,7 @@ should be returned as `null`, not omitted, so the schema stays consistent.
 ## Shim Implementation Notes
 
 **Library:** `psutil` for CPU/memory/disk. `pynvml` or `nvidia-smi` subprocess call for GPU
-(rivendell only). Ollama running status via `ollama list` subprocess or Ollama's local API.
+(rivendell only). llama.cpp running status via `localhost:8080/v1/models`
 
 **Transport:** Simple HTTP server (`http.server` or Flask/FastAPI) listening on a LAN port.
 Not exposed to the internet. Local network only.
@@ -190,7 +200,7 @@ When the user asks a question:
 2. Fetch relevant history (e.g., last 24 hours of snapshots) if the query is time-based
 3. Construct a prompt: system context describing the infrastructure + current state JSON
    + historical summary if relevant + user question
-4. Send to Ollama on rivendell (`qwen2.5:3b` by default)
+4. Send to llama.cpp on rivendell (`Qwen3.5-4B` by default)
 5. Return response to user
 
 **System prompt template (starting point):**
@@ -228,13 +238,13 @@ alerts:
     cooldown_minutes: 120
     message: "rivendell root disk at {value}% capacity"
 
-  - name: ollama_service_down
+  - name: llama_cpp_service_down
     machine: rivendell
-    field: services.ollama.running
+    field: services.llama_cpp.running
     condition: "=="
     threshold: false
     cooldown_minutes: 10
-    message: "Ollama is not running on rivendell"
+    message: "llama.cpp server is not running on rivendell"
 ```
 
 ---
@@ -246,13 +256,13 @@ this section governs what is and is not permitted.
 
 ### Permitted (read-only, pre-approved)
 - Return current system stats (already handled by shim — no extra risk)
-- Run `ollama list`, `ollama ps`
+- Run `curl localhost:8080/models`
 - Show recent log tail (specified log files only, not arbitrary paths)
 - Check if a service is running (`systemctl is-active <service>`)
 
 ### Requires Explicit Confirmation
-- Restarting a specific pre-approved service (e.g., `systemctl restart ollama`)
-- Pulling a new Ollama model
+- Restarting a specific pre-approved service
+- Pulling a new llama.cpp model
 
 ### Never Permitted (hard-coded off, not configurable)
 - Arbitrary shell command execution
@@ -276,7 +286,7 @@ decides *whether it is allowed*. The LLM should never be in the path of permissi
 | `FastAPI` or `Flask` | Shim HTTP server |
 | `httpx` or `requests` | Orchestrator polling shims |
 | `SQLite` (via `sqlite3`) | History store on Mac Mini |
-| Ollama REST API | LLM inference on rivendell |
+| `llama-server` | LLM inference on rivendell |
 | `schedule` | Polling loop on orchestrator |
 | `click` or `argparse` | CLI interface |
 | YAML config | Alert rules, machine registry |
@@ -329,8 +339,8 @@ No heavy frameworks. Keep dependencies minimal and explicit.
 
 *Log decisions here as the project evolves.*
 
-- **LLM for queries:** `qwen2.5:3b` (fast, sufficient for structured-data QA)
-- **LLM for log analysis / complex queries:** `qwen2.5-coder:14b`
+- **LLM for queries:** `Qwen3.5-4B` (fast, sufficient for structured-data QA)
+- **LLMs for log analysis / complex queries:** `Qwen3.5-Mythos-9b`, `GPT-oss-20b`, `Qwen3.6-27b`
 - **Polling interval:** 60 seconds (adjustable per machine in config)
 - **History retention:** 30 days (older rows pruned by a nightly cleanup job)
 - **Shim port:** TBD (choose something above 8000, document in config)
@@ -340,12 +350,12 @@ No heavy frameworks. Keep dependencies minimal and explicit.
 - **Shim transport:** FastAPI + uvicorn; endpoints `GET /state` and `GET /health`
 - **Schema enforcement:** shim payload modeled as Pydantic in `shim/schema.py` — the
   JSON contract is validated, not just documented
-- **Ollama reporting:** shim reports both `models_available` (installed, via `/api/tags`)
+- **llama.cpp reporting:** shim reports both `models_available` (installed, via `/api/tags`)
   and `models_loaded` (in memory, via `/api/ps`); `/api/tags` is the liveness signal so
   `running` is reliable even when no model is loaded
 - **Disk collection:** pseudo/virtual filesystems and duplicate devices filtered out
   (squashfs/overlay/tmpfs/9p, `/mnt/wsl`, `/snap`, `/var/lib/docker`) so `disk[0]` is
   always a real volume
 - **M1 done (2026-06-24):** shim verified returning valid JSON on the WSL2 dev box
-  (`ilum`); gpu/ollama degrade to null where absent. Next: deploy + test on rivendell
+  (`ilum`); gpu/llama.cpp degrade to null where absent. Next: deploy + test on rivendell
   (see `NEXT_STEPS.md`)

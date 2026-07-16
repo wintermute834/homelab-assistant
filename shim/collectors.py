@@ -28,10 +28,9 @@ from .schema import (
 
 JSON = dict[str, int | float | str | "JSON"] | list[int | float | str | "JSON"]
 
-
 MB = 1024**2
 GB = 1024**3
-LLAMA_URL = "http://127.0.0.1:11434"
+LLAMA_URL = "http://localhost:8080"
 
 # Filesystem types that are virtual, in-memory, or otherwise not real storage we
 # want to monitor. Reporting these pollutes the snapshot and, worse, lets a junk
@@ -131,7 +130,7 @@ def collect_disk() -> list[Disk]:
 def collect_gpu() -> Gpu | None:
     """NVIDIA GPU via NVML. Returns None when no NVIDIA GPU or driver is present."""
     try:
-        import pynvml
+        import pynvml # type: ignore
     except ImportError:
         return None
 
@@ -186,7 +185,7 @@ def collect_network() -> Network:
     )
 
 
-def collect_llama_cpp() -> LlamaCppService | None:
+def collect_llama() -> LlamaCppService | None:
     """
     Query the local llama.cpp API for running status and models.
 
@@ -195,14 +194,15 @@ def collect_llama_cpp() -> LlamaCppService | None:
     Returns None on machines that don't run llama.cpp (Mac Mini, Windows box) so the
     field reads as "not applicable" rather than "down".
     """
+
     try:
         '''
-        localhost:port/v1/models Format
-        {
-        "data": [
+        localhost:port/v1/models Format:
+
+        {"data": [
             {
-                "id": "ggml-org/gemma-3-4b-it-GGUF:Q4_K_M",
-                "path": "~/llama/models/Qwen3.5-0.8B-MTP-Q8_0.gguf",
+                "id": "Qwen3.5-4B",
+                "path": "~/llama/models/Qwen3.5-4B-MTP-Q4-K-M.gguf",
                 "status": {
                     "value": "loaded",
                     "args": ["llama-server", "-ctx", "4096"]
@@ -218,11 +218,11 @@ def collect_llama_cpp() -> LlamaCppService | None:
                 }
             },
             ...
-        ]
-        }
+        ]}
         '''
         tags_resp = httpx.get(f"{LLAMA_URL}/v1/models", timeout=2.0)
         tags_resp.raise_for_status()
+
     except httpx.HTTPError:
         return None  # llama.cpp not running or not installed on this machine
 
@@ -245,7 +245,7 @@ def collect_llama_cpp() -> LlamaCppService | None:
 
 
 def collect_snapshot() -> Snapshot:
-    llama_cpp = collect_llama_cpp()
+    llama_cpp = collect_llama()
 
     return Snapshot(
         hostname = socket.gethostname(),

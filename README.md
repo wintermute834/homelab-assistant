@@ -13,12 +13,12 @@ what an LLM *says* it can do and what it does reliably.
 - **shim** — a stateless process on each machine. Serves current system state as one
   JSON `Snapshot`. No history, no LLM; runs unmodified everywhere.
 - **orchestrator** (Mac Mini, not built yet) — polls every shim every 60 s into SQLite,
-  evaluates alert rules, and answers NL queries via Ollama running on the GPU host.
+  evaluates alert rules, and answers NL queries via llama.cpp running on the GPU host.
 
 ```
  orchestrator (Mac Mini) ──poll 60s──> shim on each machine
         │  SQLite history, alert rules
-        └──NL query──> Ollama (rivendell, RTX 5070 Ti)
+        └──NL query──> llama.cpp (rivendell, RTX 5070 Ti)
 ```
 
 ## Machines
