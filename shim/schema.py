@@ -23,6 +23,7 @@ class Memory(BaseModel):
 
 
 class Disk(BaseModel):
+    device: str
     mount: str
     total_gb: float
     used_gb: float
@@ -59,7 +60,7 @@ class Services(BaseModel):
 
 class Snapshot(BaseModel):
     hostname: str
-    timestamp: str  # ISO 8601, UTC, e.g. 2025-07-15T14:32:00Z
+    utc_timestamp: str  # UTC format, e.g. 2025-07-15T14:32:00Z
     cpu: Cpu
     memory: Memory
     disk: list[Disk]

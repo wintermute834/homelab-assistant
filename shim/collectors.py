@@ -55,6 +55,7 @@ _PSEUDO_MOUNT_PREFIXES = (
     "/mnt/wsl",
     "/snap",
     "/var/lib/docker",
+    "/boot" # boot partitions arent necessary
 )
 
 
@@ -118,6 +119,7 @@ def collect_disk() -> list[Disk]:
 
         disks.append(
             Disk(
+                device = part.device,
                 mount = part.mountpoint,
                 total_gb = round(usage.total / GB, 1),
                 used_gb = round(usage.used / GB, 1),
@@ -250,7 +252,7 @@ def collect_snapshot() -> Snapshot:
 
     return Snapshot(
         hostname = socket.gethostname(),
-        timestamp = utc_now(),
+        utc_timestamp = utc_now(),
         cpu = collect_cpu(),
         memory = collect_memory(),
         disk = collect_disk(),
