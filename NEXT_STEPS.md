@@ -39,7 +39,7 @@ To re-run locally:
 curl -s http://localhost:8765/state | python3 -m json.tool
 ```
 
-## NEXT: Deploy + test shim on rivendell (M2)
+## DONE: Deploy + test shim on rivendell (M2)
 
 User is doing this deploy **manually**.
 
@@ -92,24 +92,21 @@ recreate it per-target (next step).
 
 ### Validate in the output (this is the real M2 check)
 - `gpu` → name, `memory_used_mb`, `utilization_percent`, `temperature_c` all populated (NOT null)
-- `services.llamacpp` → `running: true`; `models_available` lists installed models
-  (`qwen2.5:3b`, `qwen2.5-coder:14b`). `models_loaded` may be empty if nothing is
-  currently resident in memory — that's expected, not a failure.
+- `services.llama_cpp` → `running: true`; `models` lists installed models
+  (`Qwen3.5-4B`, `Qwen3.5-Mythos-9B`) and their status/capabilities
 - `disk` → real volumes only, no snap/loop noise
 - `hostname` → `rivendell`
 
 ## Known open questions / likely follow-ups
 
-- **llama.cpp endpoint choice.** ✅ RESOLVED — `collect_llama()` now reports both
-  `models_available` (installed, via `/api/tags`) and `models_loaded` (in memory, via
-  `/api/ps`), with `/api/tags` as the liveness signal. M2 should confirm both fields
-  look right on rivendell.
+- **llama.cpp endpoint choice.** ✅ RESOLVED — `collect_llama()` now reports
+  `model` (installed, via `/models`) with status and capabilities
 - **Firewall.** When the Mac Mini orchestrator later polls rivendell, port 8765 must
   be open on the LAN. Not needed for local-only testing.
 - **Persistence.** Currently hand-launched. For unattended running (M7 goal),
   wrap in a systemd unit later. User opted for manual launch for now.
 
-## After M2
+## NEXT: After M2
 
 - M2: shims on the rest of the fleet (now **4 machines** — rivendell, caladan, the Mac
   Mini `ChibaCity`, and the dev box `ilum`; see `machines.md`).

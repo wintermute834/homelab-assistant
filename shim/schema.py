@@ -23,7 +23,6 @@ class Memory(BaseModel):
 
 
 class Disk(BaseModel):
-    device: str
     mount: str
     total_gb: float
     used_gb: float

@@ -51,27 +51,27 @@ Examples:
 ## Architecture
 
 ```
-┌───────────────────────────────────────────────┐
-│                  Mac Mini M2                  │
-│                                               │
-│  ┌─────────────────────────────────────────┐  │
-│  │         Orchestration Daemon            │  │
-│  │  - Polls shims on a schedule            │  │
-│  │  - Writes to history store (SQLite)     │  │
-│  │  - Handles user queries via CLI/web     │  │
-│  │  - Routes queries to LLM on rivendell   │  │
-│  │  - Triggers alerts when rules fire      │  │
-│  └─────────────────────────────────────────┘  │
-└──────────────────────┬────────────────────────┘
-                       │ LAN (SSH or HTTP)
-          ┌────────────┼─────────────┐
-          │            │             │
-   ┌──────▼─────┐ ┌────▼─────┐ ┌─────▼──────┐
-   │ rivendell  │ │ Mac Mini │ │ Windows PC │
-   │            │ │   shim   │ │    shim    │
-   │ shim +     │ │ (self)   │ └────────────┘
-   │ llama LLM  │ └──────────┘
-   └────────────┘
+    ┌───────────────────────────────────────────────┐
+    │                  Mac Mini M2                  │
+    │                                               │
+    │  ┌─────────────────────────────────────────┐  │
+    │  │         Orchestration Daemon            │  │
+    │  │  - Polls shims on a schedule            │  │
+    │  │  - Writes to history store (SQLite)     │  │
+    │  │  - Handles user queries via CLI/web     │  │
+    │  │  - Routes queries to LLM on rivendell   │  │
+    │  │  - Triggers alerts when rules fire      │  │
+    │  └─────────────────────────────────────────┘  │
+    └──────────────────────┬────────────────────────┘
+                           │ LAN (SSH or HTTP)
+       ┌───────────┬───────┴─────┬──────────────┐
+       │           │             │              │
+┌──────▼────┐ ┌────▼─────┐ ┌─────▼──────┐ ┌─────▼────────┐
+│ rivendell │ │ Mac Mini │ │ Windows PC │ │   caladan    │
+│           │ │          │ │            │ │              │
+│  shim +   │ │   shim   │ │   shim     │ │   shim +     │
+│ llama LLM │ │  (self)  │ │            │ │ santa picker │
+└───────────┘ └──────────┘ └────────────┘ └──────────────┘
 ```
 
 ### Components
@@ -87,8 +87,8 @@ store, listens for user input, constructs prompts from current and historical st
 calls the LLM on rivendell, and sends alerts when rules fire.
 
 **LLM Layer** (rivendell / llama.cpp)
-`qwen2.5:3b` handles the majority of conversational queries — it's fast and cheap for
-simple factual questions about structured data. `qwen2.5-coder:14b` can be invoked for
+`Qwen3.5-4B` handles the majority of conversational queries — it's fast and cheap for
+simple factual questions about structured data. `Qwen3.5-Mythos-9B` can be invoked for
 queries that require interpreting logs or reasoning about code-level issues.
 No frontier model needed for this project.
 
@@ -110,34 +110,36 @@ All machines return the same top-level structure; fields that don't apply are nu
 ```json
 {
   "hostname": "rivendell",
-  "timestamp": "2025-07-15T14:32:00Z",
+  "utc_timestamp": "2026-07-17T06:29:32Z",
   "cpu": {
-    "percent": 23.4,
+    "percent": 0.2,
     "core_count": 20,
-    "load_avg_1m": 1.2
+    "load_avg_1m": 0.06
   },
   "memory": {
-    "total_gb": 32.0,
-    "used_gb": 14.3,
-    "percent": 44.7
+    "total_gb": 31.1,
+    "used_gb": 3.4,
+    "percent": 10.9
   },
   "disk": [
     {
       "mount": "/",
-      "total_gb": 476.0,
-      "used_gb": 89.2,
-      "percent": 18.7
+      "total_gb": 1688.0,
+      "used_gb": 146.5,
+      "percent": 8.7
     }
   ],
   "gpu": {
     "name": "NVIDIA GeForce RTX 5070 Ti",
-    "memory_total_mb": 16384,
-    "memory_used_mb": 4096,
-    "utilization_percent": 67,
-    "temperature_c": 71
+    "memory_total_mb": 16303,
+    "memory_used_mb": 14521,
+    "utilization_percent": 0,
+    "temperature_c": 42
   },
   "network": {
-    "interfaces": ["eth0"],
+    "interfaces": [
+      "ethernet0"
+    ],
     "reachable": true
   },
   "services": {
@@ -145,19 +147,29 @@ All machines return the same top-level structure; fields that don't apply are nu
       "running": true,
       "models": [
         {
-          "name": "Qwen3.5-4B",
-          "status": "loaded",
+          "name": "GPT-oss-20b",
+          "status": "unloaded",
           "has_vision": false
-        },
+        }
         {
-          "name": "Qwen3.5-Mythos-9B",
+          "name": "Qwen3.5-0.8B",
           "status": "unloaded",
           "has_vision": true
         }
-      ],
+        {
+          "name": "Qwen3.5-4B",
+          "status": "loaded",
+          "has_vision": false
+        }
+        {
+          "name": "Qwen3.5-Mythos-9b",
+          "status": "sleeping",
+          "has_vision": true
+        }
+      ]
     }
   },
-  "uptime_hours": 48.3
+  "uptime_hours": 42.3
 }
 ```
 
@@ -169,9 +181,9 @@ should be returned as `null`, not omitted, so the schema stays consistent.
 ## Shim Implementation Notes
 
 **Library:** `psutil` for CPU/memory/disk. `pynvml` or `nvidia-smi` subprocess call for GPU
-(rivendell only). llama.cpp running status via `localhost:8080/v1/models`
+(rivendell only). llama.cpp running status via `localhost:8080/models`
 
-**Transport:** Simple HTTP server (`http.server` or Flask/FastAPI) listening on a LAN port.
+**Transport:** Simple HTTP server (FastAPI) listening on a LAN port.
 Not exposed to the internet. Local network only.
 
 **Polling:** The Mac Mini orchestrator polls each shim every 60 seconds by default.
@@ -207,7 +219,7 @@ When the user asks a question:
 ```
 You are a homelab infrastructure assistant. You have access to real-time and historical
 data from three machines: rivendell (Linux, primary compute, RTX 5070 Ti GPU),
-mac-mini (macOS, orchestration node), and windows-dev (Windows 11, dev workstation).
+ChibaCity (macOS, orchestration node), and ilum (Windows 11, dev workstation).
 
 Current state data is provided as JSON. Answer questions factually based on this data.
 If the data does not contain enough information to answer, say so — do not guess.

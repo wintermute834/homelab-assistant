@@ -84,17 +84,18 @@ def collect_cpu() -> Cpu:
     # interval=None returns the load since the previous call; the daemon polls on a
     # schedule so successive samples are meaningful without blocking here.
     percent = psutil.cpu_percent(interval=None)
+    core_count = psutil.cpu_count(logical=True) or 0
 
     try:
-        load_avg_1m = psutil.getloadavg()[0]
+        load_avg_1m = psutil.getloadavg()[0] * 100 / (core_count or 1) # load is for all cores combined
 
     except (AttributeError, OSError):
         load_avg_1m = None  # not available on stock Windows
 
     return Cpu(
         percent = round(percent, 1),
-        core_count = psutil.cpu_count(logical=True) or 0,
-        load_avg_1m = round(load_avg_1m, 2) if load_avg_1m is not None else None,
+        core_count = core_count,
+        load_avg_1m = round(load_avg_1m, 1) if load_avg_1m is not None else None,
     )
 
 
@@ -142,13 +143,12 @@ def collect_disk() -> list[Disk]:
 
     return [
         Disk(
-            device = dev,
             mount = disk[0],
             total_gb = round(disk[1] / disk[3] / GB, 1), # divide by total partitions
             used_gb = round(disk[2] / GB, 1),
-            percent = round(disk[2] / disk[1] * disk[3] * 100, 1),
+            percent = round(disk[2] / disk[1] * disk[3] * 100, 1)
         )
-        for dev, disk in disks.items()
+        for _, disk in disks.items()
     ]
 
 

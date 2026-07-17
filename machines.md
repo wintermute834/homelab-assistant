@@ -26,7 +26,7 @@ Fields marked `_TODO_` are unconfirmed — fill in as you verify on the real mac
 | **LAN address** | Check in local .lan_addresses.md file |
 | **Shim port** | 8765 |
 | **Polling interval** | 60 s default (spec notes a shorter interval may be warranted when training jobs run) |
-| **Runs / services** | llama.cpp — models: `qwen3.5:3b` (default), `qwen2.5-coder:14b` (log/code reasoning) |
+| **Runs / services** | llama.cpp — models: `Qwen3.5-4B` (main), `Qwen3.5-Mythos-9B` (log/code reasoning) |
 | **GPU metrics** | `pynvml` installed here **only** — lights up the `gpu` field |
 | **Shim deploy** | **Manual, by the user** — do not ssh/scp on their behalf. Steps in `NEXT_STEPS.md`. |
 | **Shim status** | M2 pending — deploy + verify `gpu`/`llama.cpp` populated |
