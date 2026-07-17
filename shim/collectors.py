@@ -146,7 +146,7 @@ def collect_disk() -> list[Disk]:
             mount = disk[0],
             total_gb = round(disk[1] / disk[3] / GB, 1), # divide by total partitions
             used_gb = round(disk[2] / GB, 1),
-            percent = round(disk[2] / disk[1] / disk[3] * 100, 1),
+            percent = round(disk[2] / disk[1] * disk[3] * 100, 1),
         )
         for dev, disk in disks.items()
     ]
