@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import socket
 import time
+import re
 from datetime import datetime, timezone
 from typing import Any
 
@@ -55,7 +56,13 @@ _PSEUDO_MOUNT_PREFIXES = (
     "/mnt/wsl",
     "/snap",
     "/var/lib/docker",
-    "/boot" # boot partitions arent necessary
+    "/boot", # boot partitions arent necessary
+
+    # mac garbage
+    "/System/Volumes/Update/", # system updates
+    "/System/Volumes/Hardware",
+    "/System/Volumes/iSCPreboot", # boot
+    "/System/Volumes/xarts"
 )
 
 
@@ -102,32 +109,47 @@ def collect_memory() -> Memory:
 
 
 def collect_disk() -> list[Disk]:
-    disks: list[Disk] = []
-    seen_devices: set[str] = set()
+    disks: dict[str, tuple[str, int, int, int]] = {} # device: (mount, total_sum, used_sum, num_parts)
 
     for part in psutil.disk_partitions(all=False):
         if not _is_real_disk(part.mountpoint, part.fstype): continue
 
-        if part.device in seen_devices: continue # Collapse multiple mounts backed by the same device down to one entry.
+        if part.device.startswith("/dev/disk"): # mac splits disks weirdly, have to combine their allocated space
+            result = re.search("(/dev/disk[0-9]+)", part.device)
 
-        seen_devices.add(part.device)
+            if result is None: continue
+
+            device = result.group()
+
+        else:
+            device = part.mountpoint
 
         try:
             usage = psutil.disk_usage(part.mountpoint)
 
         except (PermissionError, OSError): continue  # e.g. an unreadable or disconnected mount
 
-        disks.append(
-            Disk(
-                device = part.device,
-                mount = part.mountpoint,
-                total_gb = round(usage.total / GB, 1),
-                used_gb = round(usage.used / GB, 1),
-                percent = round(usage.percent, 1),
+        if device in disks:
+            disks[device] = (
+                min(disks[device][0], part.mountpoint, key=len),
+                disks[device][1] + usage.total,
+                disks[device][2] + usage.used,
+                disks[device][3] + 1
             )
-        )
+        
+        else:
+            disks[device] = (part.mountpoint, usage.total, usage.used, 1)
 
-    return disks
+    return [
+        Disk(
+            device = dev,
+            mount = disk[0],
+            total_gb = round(disk[1] / disk[3] / GB, 1), # divide by total partitions
+            used_gb = round(disk[2] / GB, 1),
+            percent = round(disk[1] / disk[2] / disk[3] * 100, 1),
+        )
+        for dev, disk in disks.items()
+    ]
 
 
 def collect_gpu() -> Gpu | None:
