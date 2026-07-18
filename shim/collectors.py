@@ -255,11 +255,11 @@ def collect_llama() -> LlamaCppService | None:
 
     models = [
         Model(
-            name = model.get("id", ""),                                                        # type: ignore
-            status = model.get("status", {}).get("value", ""),                                 # type: ignore
-            has_vision = "image" in model.get("architecture", {}).get("input_modalities", []), # type: ignore
+            name = model.get("id", "NULL"),                                              # type: ignore
+            status = model.get("status", {}).get("value", "NULL"),                       # type: ignore
+            input_modalities = model.get("architecture", {}).get("input_modalities", []) # type: ignore
         )
-        for model in data
+        for model in data if model.get("id", "default") != "default"
     ]
 
     return LlamaCppService(

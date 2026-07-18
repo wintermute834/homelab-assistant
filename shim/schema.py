@@ -45,7 +45,7 @@ class Network(BaseModel):
 class Model(BaseModel):
     name: str
     status: str  # unloaded, loading, loaded, sleeping
-    has_vision: bool
+    input_modalities: list[str]
 
 
 class LlamaCppService(BaseModel):
