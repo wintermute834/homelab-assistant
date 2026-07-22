@@ -19,7 +19,7 @@ _Last updated: 2026-06-28_
 
 ```
 home-assistant/
-├── requirements.txt        # fastapi, uvicorn[standard], psutil, httpx (pynvml commented — rivendell only)
+├── requirements.txt        # fastapi, uvicorn[standard], psutil, httpx (pynvml commented - rivendell only)
 ├── NEXT_STEPS.md           # this file
 ├── project-homelab-assistant.md
 └── shim/
@@ -45,11 +45,11 @@ User is doing this deploy **manually**.
 
 ### Getting the files onto the target
 
-Pick one of these. **git clone is preferred** — it copies exactly the tracked files
+Pick one of these. **git clone is preferred** - it copies exactly the tracked files
 (no `.venv`, no `__pycache__`, no `.lan_addresses.md`, since all are gitignored) and
 updates later are a one-line `git pull`.
 
-**Option A — git clone (preferred).** Repo is private (`wintermute834/homelab-assistant`),
+**Option A - git clone (preferred).** Repo is private (`wintermute834/homelab-assistant`),
 so the target needs read access. Easiest is the GitHub CLI; an HTTPS token or deploy key
 also works.
 ```bash
@@ -60,16 +60,16 @@ cd ~/homelab-shim
 ```
 To update the shim on a later change, just: `cd ~/homelab-shim && git pull`.
 
-The repo root has more than the shim (docs etc.), but that's harmless — you still only
+The repo root has more than the shim (docs etc.), but that's harmless - you still only
 *run* `shim/`, and `pip install -r requirements.txt` pulls just what the shim needs.
 
-**Option B — copy only the shim (no git on the target).** Excludes `__pycache__` and the
+**Option B - copy only the shim (no git on the target).** Excludes `__pycache__` and the
 shim README so only runtime files land:
 ```bash
 rsync -av --exclude='__pycache__' --exclude='README.md' shim requirements.txt rivendell:~/homelab-shim/
 ```
 Required runtime files: `shim/__init__.py`, `shim/schema.py`, `shim/collectors.py`,
-`shim/server.py`, and `requirements.txt`. **Never** copy `.venv/` between machines —
+`shim/server.py`, and `requirements.txt`. **Never** copy `.venv/` between machines -
 recreate it per-target (next step).
 
 ### Then, on the target
@@ -80,7 +80,7 @@ recreate it per-target (next step).
    cd ~/homelab-shim
    python3 -m venv .venv && source .venv/bin/activate
    pip install -r requirements.txt
-   pip install pynvml          # rivendell ONLY — lights up the GPU field
+   pip install pynvml          # rivendell ONLY - lights up the GPU field
    ```
 3. **Sanity-check NVML before running:**
    ```bash
@@ -99,7 +99,7 @@ recreate it per-target (next step).
 
 ## Known open questions / likely follow-ups
 
-- **llama.cpp endpoint choice.** ✅ RESOLVED — `collect_llama()` now reports
+- **llama.cpp endpoint choice.** ✅ RESOLVED - `collect_llama()` now reports
   `model` (installed, via `/models`) with status and capabilities
 - **Firewall.** When the Mac Mini orchestrator later polls rivendell, port 8765 must
   be open on the LAN. Not needed for local-only testing.
@@ -108,6 +108,6 @@ recreate it per-target (next step).
 
 ## NEXT: After M2
 
-- M2: shims on the rest of the fleet (now **4 machines** — rivendell, caladan, the Mac
+- M2: shims on the rest of the fleet (now **4 machines** - rivendell, caladan, the Mac
   Mini `ChibaCity`, and the dev box `ilum`; see `machines.md`).
-- M3: Mac Mini orchestrator — polling loop + SQLite history store.
+- M3: Mac Mini orchestrator - polling loop + SQLite history store.

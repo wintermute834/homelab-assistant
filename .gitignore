@@ -1,4 +1,4 @@
-# Local-only infrastructure details — keep LAN topology out of the repo
+# Local-only infrastructure details - keep LAN topology out of the repo
 .lan_addresses.md
 
 # Python

@@ -1,18 +1,18 @@
 # Machines
 
 **Canonical registry of the machines in the Homelab Assistant project.** This is the
-single source of truth for per-machine facts — hostnames, hardware, roles, shim config,
+single source of truth for per-machine facts - hostnames, hardware, roles, shim config,
 and gotchas. Other docs (`CLAUDE.md`, `project-homelab-assistant.md`, `NEXT_STEPS.md`)
 should summarize and link here rather than restate these details.
 
 > Each shim reports a `hostname` field; alert rules and the orchestrator key off it, so
 > the **canonical hostname** below must match what that machine's shim actually returns.
 
-Fields marked `_TODO_` are unconfirmed — fill in as you verify on the real machine.
+Fields marked `_TODO_` are unconfirmed - fill in as you verify on the real machine.
 
 ---
 
-## rivendell — primary compute / LLM host
+## rivendell - primary compute / LLM host
 
 | | |
 |---|---|
@@ -26,15 +26,15 @@ Fields marked `_TODO_` are unconfirmed — fill in as you verify on the real mac
 | **LAN address** | Check in local .lan_addresses.md file |
 | **Shim port** | 8765 |
 | **Polling interval** | 60 s default (spec notes a shorter interval may be warranted when training jobs run) |
-| **Runs / services** | llama.cpp — models: `Qwen3.5-4B` (main), `Qwen3.5-Mythos-9B` (log/code reasoning) |
-| **GPU metrics** | `pynvml` installed here **only** — lights up the `gpu` field |
-| **Shim deploy** | **Manual, by the user** — do not ssh/scp on their behalf. Steps in `NEXT_STEPS.md`. |
-| **Shim status** | M2 pending — deploy + verify `gpu`/`llama.cpp` populated |
+| **Runs / services** | llama.cpp - models: `Qwen3.5-4B` (main), `Qwen3.5-Mythos-9B` (log/code reasoning) |
+| **GPU metrics** | `pynvml` installed here **only** - lights up the `gpu` field |
+| **Shim deploy** | **Manual, by the user** - do not ssh/scp on their behalf. Steps in `NEXT_STEPS.md`. |
+| **Shim status** | M2 pending - deploy + verify `gpu`/`llama.cpp` populated |
 | **Notes** | Primary machine; hands-on control preferred. |
 
 ---
 
-## caladan — Secondary compute / web application VM.  might add network monitoring processes in the future to this VM
+## caladan - Secondary compute / web application VM.  might add network monitoring processes in the future to this VM
 
 | | |
 |---|---|
@@ -49,19 +49,19 @@ Fields marked `_TODO_` are unconfirmed — fill in as you verify on the real mac
 | **Shim port** |  8765 |
 | **Polling interval** | 60 s default (spec notes a shorter interval may be warranted when training jobs run) |
 | **Runs / services** |  _TODO_ |
-| **GPU metrics** | AMD integrated GPU — **not** covered by NVML/`pynvml` (NVIDIA-only), so the shim's `gpu` field degrades to `null`. CPU/mem/disk are the useful metrics here. (If GPU stats are ever wanted, they'd come from `radeontop`/sysfs, not pynvml — but this is an old TeraScale card, so low priority.) |
-| **Shim deploy** | **Manual, by the user** — do not ssh/scp on their behalf. Steps in `NEXT_STEPS.md`. |
+| **GPU metrics** | AMD integrated GPU - **not** covered by NVML/`pynvml` (NVIDIA-only), so the shim's `gpu` field degrades to `null`. CPU/mem/disk are the useful metrics here. (If GPU stats are ever wanted, they'd come from `radeontop`/sysfs, not pynvml - but this is an old TeraScale card, so low priority.) |
+| **Shim deploy** | **Manual, by the user** - do not ssh/scp on their behalf. Steps in `NEXT_STEPS.md`. |
 | **Shim status** | Not yet deployed |
 | **Notes** | Secondary machine;  |
 
 ---
 
-## mac-mini — orchestrator
+## mac-mini - orchestrator
 
 | | |
 |---|---|
 | **Canonical hostname** | `ChibaCity` |
-| **Role** | Orchestration node — polling daemon, SQLite history store, alert engine, query handler |
+| **Role** | Orchestration node - polling daemon, SQLite history store, alert engine, query handler |
 | **OS / platform** | macOS (Mac Mini M2) |
 | **CPU** | Apple M2 |
 | **RAM** | 8 GB |
@@ -70,13 +70,13 @@ Fields marked `_TODO_` are unconfirmed — fill in as you verify on the real mac
 | **Shim port** | 8765 |
 | **Polling interval** | 60 s (polls itself + the others) |
 | **Runs / services** | Orchestrator daemon (not built yet) + its own shim |
-| **GPU / llama.cpp** | none — `gpu` and `services.llamacpp` report `null` |
+| **GPU / llama.cpp** | none - `gpu` and `services.llamacpp` report `null` |
 | **Shim status** | Not yet deployed |
 | **Notes** | The "brain"; everything else reports to it. |
 
 ---
 
-## ilum — Windows dev box (where Claude Code runs)
+## ilum - Windows dev box (where Claude Code runs)
 
 | | |
 |---|---|
@@ -90,9 +90,9 @@ Fields marked `_TODO_` are unconfirmed — fill in as you verify on the real mac
 | **LAN address** | Check in local .lan_addresses.md file |
 | **Shim port** | 8765 |
 | **Polling interval** | 60 s |
-| **Runs / services** | none monitored — `gpu` and `services.llama.cpp` report `null` |
-| **Shim status** | M1 verified here — `/state` returns schema-valid JSON |
-| **Gotchas** | Stock Python 3.12 had no pip/venv (needed `sudo apt install python3-venv python3-pip`). WSL pollutes `psutil.disk_partitions` with bind-mounts/overlays (some bogusly 100% full) — handled by the disk filter in the shim. |
+| **Runs / services** | none monitored - `gpu` and `services.llama.cpp` report `null` |
+| **Shim status** | M1 verified here - `/state` returns schema-valid JSON |
+| **Gotchas** | Stock Python 3.12 had no pip/venv (needed `sudo apt install python3-venv python3-pip`). WSL pollutes `psutil.disk_partitions` with bind-mounts/overlays (some bogusly 100% full) - handled by the disk filter in the shim. |
 
 ---
 
@@ -101,7 +101,7 @@ Fields marked `_TODO_` are unconfirmed — fill in as you verify on the real mac
 - **Hostname naming.** ✅ Canonical names set here: `rivendell`, `caladan`, `ChibaCity`
   (the Mac Mini), `ilum` (the dev box). Still TODO: the spec's example system prompt
   (`project-homelab-assistant.md`, ~lines 198-199) still says `mac-mini` / `windows-dev`
-  — update it (and any future alert config) to match these canonical names.
+  - update it (and any future alert config) to match these canonical names.
 - **LAN addresses.** ✅ Recorded in the local `.lan_addresses.md` (gitignored). Firewall:
   port 8765 must still be reachable on the LAN for the Mac Mini to poll each machine.
 - **caladan TODOs.** GPU VRAM and `Runs / services` (the web apps) still unconfirmed.

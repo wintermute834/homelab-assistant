@@ -1,5 +1,5 @@
 
-curl http://192.168.0.220:8080/v1/chat/completions \
+curl -s http://192.168.0.220:8080/v1/chat/completions \
     -H "Content-Type: application/json" \
     -d '{
         "model": "Qwen3.5-4B",

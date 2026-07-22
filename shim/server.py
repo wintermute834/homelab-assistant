@@ -1,14 +1,13 @@
-"""Shim HTTP server: one endpoint, one structured response.
+"""
+Shim HTTP server: one endpoint, one structured response.
 
 The shim only collects and reports local state. It never talks to the LLM and holds
-no history — that's the orchestrator's job. Bind to the LAN only; do not expose to
+no history - that's the orchestrator's job. Bind to the LAN only; do not expose to
 the internet.
 
 Run:
     uvicorn shim.server:app --host 0.0.0.0 --port 8765
 """
-
-from __future__ import annotations
 
 from fastapi import FastAPI
 

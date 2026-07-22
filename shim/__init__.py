@@ -1,1 +1,3 @@
-"""Homelab assistant shim — collects local system state as a structured snapshot."""
+"""
+Homelab assistant shim - collects local system state as a structured snapshot.
+"""

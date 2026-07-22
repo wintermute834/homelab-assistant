@@ -1,11 +1,10 @@
-"""Structured data contract for shim payloads.
+"""
+Structured data contract for shim payloads.
 
 Every machine returns the same top-level structure. Fields that don't apply to a
 machine (e.g. `gpu` on the Mac Mini) are returned as None, never omitted, so the
 schema stays consistent across the fleet. See project-homelab-assistant.md.
 """
-
-from __future__ import annotations
 
 from pydantic import BaseModel
 
@@ -67,3 +66,4 @@ class Snapshot(BaseModel):
     network: Network
     services: Services
     uptime_hours: float
+

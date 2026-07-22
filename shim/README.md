@@ -2,7 +2,7 @@
 
 A lightweight process that collects this machine's system state and serves it as one
 JSON payload conforming to the `Snapshot` contract (`schema.py`). It does **not** talk
-to the LLM and keeps **no** history — it only reports current state. Runs unmodified on
+to the LLM and keeps **no** history - it only reports current state. Runs unmodified on
 rivendell, the Mac Mini, and the Windows dev box.
 
 ## Setup
@@ -25,10 +25,10 @@ Bind to the LAN only. Do not expose to the internet.
 
 ## Endpoints
 
-| Method | Path      | Purpose                                      |
-|--------|-----------|----------------------------------------------|
-| GET    | `/state`  | Full system snapshot (the contract payload)  |
-| GET    | `/health` | Cheap liveness check for the polling loop    |
+| Method | Path      | Purpose                                     |
+|--------|-----------|---------------------------------------------|
+| GET    | `/state`  | Full system snapshot (the contract payload) |
+| GET    | `/health` | Cheap liveness check for the polling loop   |
 
 ## Test
 

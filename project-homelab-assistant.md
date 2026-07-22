@@ -1,9 +1,9 @@
-# Project 2 — Homelab Assistant
+# Project 2 - Homelab Assistant
 
 ## Goal
 
-Build a conversational agent that knows the home infrastructure — rivendell, the Mac Mini,
-and the Windows dev box — and can answer natural language questions about system state,
+Build a conversational agent that knows the home infrastructure - rivendell, the Mac Mini,
+and the Windows dev box - and can answer natural language questions about system state,
 running services, and resource usage. Optionally execute a small set of pre-approved safe
 commands on request.
 
@@ -16,7 +16,7 @@ By the end, there should be something genuinely useful that gets used after the 
 
 ---
 
-## Core Capabilities (Scoped — Do Not Expand Until These Are Solid)
+## Core Capabilities (Scoped - Do Not Expand Until These Are Solid)
 
 ### 1. Query
 Ask the assistant questions about the current state of the infrastructure.
@@ -37,7 +37,7 @@ Examples:
 - "Has disk usage been climbing this week?"
 
 ### 3. Alert
-The system proactively notifies when something crosses a defined threshold —
+The system proactively notifies when something crosses a defined threshold -
 without being asked.
 
 Examples:
@@ -79,7 +79,7 @@ Examples:
 **Shim** (runs on each monitored machine)
 A lightweight Python process (or script called on demand) that collects system state
 and returns it as a structured JSON payload. The shim exposes a minimal local HTTP
-API — one endpoint, one response. It does not talk to the LLM. It only collects data.
+API - one endpoint, one response. It does not talk to the LLM. It only collects data.
 
 **Orchestration Daemon** (runs on Mac Mini)
 The brain of the system. Polls each shim on a schedule, writes results to the history
@@ -87,14 +87,14 @@ store, listens for user input, constructs prompts from current and historical st
 calls the LLM on rivendell, and sends alerts when rules fire.
 
 **LLM Layer** (rivendell / llama.cpp)
-`Qwen3.5-4B` handles the majority of conversational queries — it's fast and cheap for
+`Qwen3.5-4B` handles the majority of conversational queries - it's fast and cheap for
 simple factual questions about structured data. `Qwen3.5-Mythos-9B` can be invoked for
 queries that require interpreting logs or reasoning about code-level issues.
 No frontier model needed for this project.
 
 **History Store** (SQLite on Mac Mini)
 A simple append-only table of timestamped JSON snapshots from each machine.
-SQLite is sufficient — this is not a high-volume database. The orchestrator queries it
+SQLite is sufficient - this is not a high-volume database. The orchestrator queries it
 to provide historical context to the LLM.
 
 **User Interface**
@@ -102,7 +102,7 @@ Start with a CLI. A simple web interface is a stretch goal.
 
 ---
 
-## Shim — Data Schema
+## Shim - Data Schema
 
 Each shim returns a JSON object conforming to this schema.
 All machines return the same top-level structure; fields that don't apply are null.
@@ -147,25 +147,16 @@ All machines return the same top-level structure; fields that don't apply are nu
       "running": true,
       "models": [
         {
-          "name": "GPT-oss-20b",
-          "status": "unloaded",
-          "has_vision": false
-        }
-        {
-          "name": "Qwen3.5-0.8B",
-          "status": "unloaded",
-          "has_vision": true
-        }
-        {
           "name": "Qwen3.5-4B",
           "status": "loaded",
           "has_vision": false
-        }
+        },
         {
           "name": "Qwen3.5-Mythos-9b",
           "status": "sleeping",
           "has_vision": true
-        }
+        },
+        ...
       ]
     }
   },
@@ -189,12 +180,12 @@ Not exposed to the internet. Local network only.
 **Polling:** The Mac Mini orchestrator polls each shim every 60 seconds by default.
 Configurable per-machine. Rivendell may warrant a shorter interval when training jobs are running.
 
-**Windows shim note:** `psutil` works on Windows. GPU on the Windows box is an older card —
+**Windows shim note:** `psutil` works on Windows. GPU on the Windows box is an older card -
 collect what NVML exposes but don't rely on it. CPU/memory/disk are the useful metrics there.
 
 ---
 
-## Orchestration Daemon — Key Responsibilities
+## Orchestration Daemon - Key Responsibilities
 
 ### Polling Loop
 ```
@@ -218,11 +209,14 @@ When the user asks a question:
 **System prompt template (starting point):**
 ```
 You are a homelab infrastructure assistant. You have access to real-time and historical
-data from three machines: rivendell (Linux, primary compute, RTX 5070 Ti GPU),
-ChibaCity (macOS, orchestration node), and ilum (Windows 11, dev workstation).
+data from four machines:
+  rivendell (Linux, primary compute, RTX 5070 Ti GPU),
+  ChibaCity (macOS, orchestration node),
+  ilum (Windows 11, dev workstation),
+  caladan (Linux, Santa Picker web host)
 
 Current state data is provided as JSON. Answer questions factually based on this data.
-If the data does not contain enough information to answer, say so — do not guess.
+If the data does not contain enough information to answer, say so - do not guess.
 Keep responses concise.
 
 Current snapshot:
@@ -267,8 +261,8 @@ If we add the ability for the assistant to *execute* commands (stretch goal, not
 this section governs what is and is not permitted.
 
 ### Permitted (read-only, pre-approved)
-- Return current system stats (already handled by shim — no extra risk)
-- Run `curl localhost:8080/models`
+- Return current system stats (already handled by shim - no extra risk)
+- Run `curl 192.168.0.210:8080/models`
 - Show recent log tail (specified log files only, not arbitrary paths)
 - Check if a service is running (`systemctl is-active <service>`)
 
@@ -295,7 +289,7 @@ decides *whether it is allowed*. The LLM should never be in the path of permissi
 | Python 3.11+ | All components |
 | `psutil` | CPU, memory, disk metrics (all machines) |
 | `pynvml` | GPU metrics (rivendell only) |
-| `FastAPI` or `Flask` | Shim HTTP server |
+| `FastAPI` | Shim HTTP server |
 | `httpx` or `requests` | Orchestrator polling shims |
 | `SQLite` (via `sqlite3`) | History store on Mac Mini |
 | `llama-server` | LLM inference on rivendell |
@@ -312,7 +306,7 @@ No heavy frameworks. Keep dependencies minimal and explicit.
 | Task | Lead |
 |---|---|
 | Shim implementation (all machines) | Son (Python) |
-| Mac Mini orchestration daemon — polling loop | Dad (infra) + Son (Python) |
+| Mac Mini orchestration daemon - polling loop | Dad (infra) + Son (Python) |
 | SQLite history store schema and queries | Son |
 | LLM prompt engineering and query handler | Son (with iteration) |
 | Alert rule engine | Shared |
@@ -360,7 +354,7 @@ No heavy frameworks. Keep dependencies minimal and explicit.
 - **Alert delivery:** Local notification / log file first; ntfy.sh integration is stretch
 - **Shim port:** 8765 (chosen, was TBD)
 - **Shim transport:** FastAPI + uvicorn; endpoints `GET /state` and `GET /health`
-- **Schema enforcement:** shim payload modeled as Pydantic in `shim/schema.py` — the
+- **Schema enforcement:** shim payload modeled as Pydantic in `shim/schema.py` - the
   JSON contract is validated, not just documented
 - **llama.cpp reporting:** shim reports both `models_available` (installed, via `/api/tags`)
   and `models_loaded` (in memory, via `/api/ps`); `/api/tags` is the liveness signal so

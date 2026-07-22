@@ -1,11 +1,10 @@
-"""Collect system state and shape it into the Snapshot contract.
+"""
+Collect system state and shape it into the Snapshot contract.
 
 Every collector is defensive: hardware or services that aren't present on a given
 machine yield None rather than raising, so the same shim binary runs unmodified on
 rivendell (Linux + NVIDIA), the Mac Mini (no GPU), and the Windows dev box.
 """
-
-from __future__ import annotations
 
 import socket
 import time
@@ -27,8 +26,6 @@ from .schema import (
     Services,
     Snapshot,
 )
-
-JSON = dict[str, int | float | str | Any] | list[int | float | str | Any]
 
 MB = 1024**2
 GB = 1024**3
@@ -74,6 +71,16 @@ def _is_real_disk(mountpoint: str, fstype: str) -> bool:
         return False
 
     return True
+
+
+def hostname() -> str:
+    hostname = socket.gethostname()
+
+    if hostname.endswith(".local"):
+        return hostname[:-6]
+
+    else:
+        return hostname
 
 
 def utc_now() -> str:
@@ -273,7 +280,7 @@ def collect_snapshot() -> Snapshot:
     llama_cpp = collect_llama()
 
     return Snapshot(
-        hostname = socket.gethostname(),
+        hostname = hostname(),
         utc_timestamp = utc_now(),
         cpu = collect_cpu(),
         memory = collect_memory(),
