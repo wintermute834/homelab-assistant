@@ -290,7 +290,7 @@ decides *whether it is allowed*. The LLM should never be in the path of permissi
 | `psutil` | CPU, memory, disk metrics (all machines) |
 | `pynvml` | GPU metrics (rivendell only) |
 | `FastAPI` | Shim HTTP server |
-| `httpx` or `requests` | Orchestrator polling shims |
+| `httpx` | Orchestrator polling shims and llama.cpp |
 | `SQLite` (via `sqlite3`) | History store on Mac Mini |
 | `llama-server` | LLM inference on rivendell |
 | `schedule` | Polling loop on orchestrator |
