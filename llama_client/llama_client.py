@@ -48,7 +48,7 @@ class LlamaClient:
             f"{self.url}/v1/chat/completions",
             headers = {"Content-Type": "application/json"},
             json = query.model_dump(exclude_none=True),
-            timeout = httpx.Timeout(10, read=None)
+            timeout = httpx.Timeout(10, read=None) # unlimited read time
         )
         response.raise_for_status()
 

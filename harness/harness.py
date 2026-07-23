@@ -30,8 +30,14 @@ class ToolMap:
         args: JSONObject = json.loads(tool_call.function.arguments)
         result = func(**args)
 
+        if isinstance(result, str):
+            content = result
+
+        else:
+            content = json.dumps(result, ensure_ascii=False)
+
         return ToolResponseMessage(
-            content = f"{{\"result\": \"{result}\"}}",
+            content = content,
             id = tool_call.id
         )
 
@@ -59,8 +65,8 @@ class Harness:
         if system_prompt is not None:
             self.messages.append(SystemMessage(content = system_prompt))
 
-    def send_message(self, user_message: str) -> list[str]:
-        out = []
+    def send_message(self, user_message: str) -> list[Message]:
+        start_index = len(self.messages)
 
         self.messages.append(UserMessage(
             content = user_message
@@ -76,34 +82,27 @@ class Harness:
             response = server_response.choices[0]
             message = response.message
 
-            out.append(f"Reasoning: {message.reasoning_content}")
-
             self.messages.append(message)
 
             if response.finish_reason == "tool_calls" and message.tool_calls is not None:
                 with futures.ThreadPoolExecutor() as executor:
                     tool_futures: list[tuple[ToolCall, futures.Future[ToolResponseMessage]]] = []
 
+                    # start parallel futures for all tool calls
                     for tool_call in message.tool_calls:
                         future = executor.submit(self.tool_map.get_tool_response, tool_call)
                         tool_futures.append((tool_call, future))
 
+                    # wait until all futures are done, adding them as they finish
                     for tool_call, future in tool_futures:
                         tool_response = future.result()
 
                         self.messages.append(tool_response)
 
-                        out.append(f"Tool Call: {json.dumps({
-                            "name": tool_call.function.name,
-                            "args": tool_call.function.arguments,
-                            "output": tool_response.content
-                        })}")
-
             else:
-                out.append(f"{message.content}")
                 break
 
-        return out
+        return self.messages[start_index:]
 
     def clear_history(self) -> None:
         if self.system_prompt is None:

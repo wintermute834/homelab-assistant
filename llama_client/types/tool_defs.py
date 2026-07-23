@@ -41,4 +41,4 @@ class ToolDefinition(BaseModel):
 
 class Tool(BaseModel):
     definition: ToolDefinition
-    function: Callable[[*tuple[JSON, ...]], str]
+    function: Callable[[*tuple[JSON, ...]], JSON]

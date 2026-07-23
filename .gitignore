@@ -1,5 +1,6 @@
 # Local-only infrastructure details - keep LAN topology out of the repo
 .lan_addresses.md
+orchestrator/lan_addresses.py
 
 # Python
 .venv/
