@@ -2,7 +2,7 @@
 from harness import Harness
 
 from . import lan_addresses
-from .tools import TOOLS
+from . import tools
 
 
 
@@ -29,7 +29,7 @@ class Orchestrator:
     def __init__(self) -> None:
         self.harness = Harness(
             MODEL,
-            TOOLS,
+            tools.ALL,
             SYSTEM_PROMPT,
             LLAMA_URL
         )

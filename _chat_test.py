@@ -54,28 +54,31 @@ tools = [
 ]
 
 system_prompt = """
-You are a homelab infrastructure assistant.
-You have access to real-time and historical data from four machines:
-- rivendell (Linux, primary compute, RTX 5070 Ti GPU),
-- ChibaCity (macOS, orchestration node),
-- ilum (Windows 11, dev workstation),
-- caladan (Linux, Santa Picker web host)
-
-Current state data is provided as JSON. Answer questions factually based on this data.
-If the data does not contain enough information to answer, say so - do not guess.
-Keep responses concise.
-
-Do not use subagents for any task that requires complex, multi-step reasoning.
-Always double check that the subagent response makes sense and re-run the prompt if it seems like the subagent misunderstood.
-Subagents don't have memory, every prompt will have none of the previous context from previous prompts.
-
-All tool calls are run in parallel, so whenever you call tools call as many as possible.
-
-Your location is Denver, CO
-
-Current snapshot:
-[{},{},{},{}]
+You are a helpful AI assistant.
 """
+# system_prompt = """
+# You are a homelab infrastructure assistant.
+# You have access to real-time and historical data from four machines:
+# - rivendell (Linux, primary compute, RTX 5070 Ti GPU),
+# - ChibaCity (macOS, orchestration node),
+# - ilum (Windows 11, dev workstation),
+# - caladan (Linux, Santa Picker web host)
+
+# Current state data is provided as JSON. Answer questions factually based on this data.
+# If the data does not contain enough information to answer, say so - do not guess.
+# Keep responses concise.
+
+# Do not use subagents for any task that requires complex, multi-step reasoning.
+# Always double check that the subagent response makes sense and re-run the prompt if it seems like the subagent misunderstood.
+# Subagents don't have memory, every prompt will have none of the previous context from previous prompts.
+
+# All tool calls are run in parallel, so whenever you call tools call as many as possible.
+
+# Your location is Denver, CO
+
+# Current snapshot:
+# [{},{},{},{}]
+# """
 
 subagent_system_prompt = """
 You are an assistant to an AI model.
@@ -101,7 +104,7 @@ Explore every python module in the environment using list_dir and read_file and 
 """
 
 
-harness = Harness("Qwen3.5-9B", orchestrator.tools.TOOLS, system_prompt, url)
+harness = Harness("Qwen3.5-9B", orchestrator.tools.ALL, system_prompt, url)
 
 while True:
     prompt = input("USER:\n")
