@@ -90,7 +90,7 @@ def utc_now() -> str:
 def collect_cpu() -> Cpu:
     # interval=None returns the load since the previous call; the daemon polls on a
     # schedule so successive samples are meaningful without blocking here.
-    percent = psutil.cpu_percent(interval=None)
+    load = psutil.cpu_percent(interval=None)
     core_count = psutil.cpu_count(logical=True) or 0
 
     try:
@@ -100,7 +100,7 @@ def collect_cpu() -> Cpu:
         load_avg_1m = None  # not available on stock Windows
 
     return Cpu(
-        percent = round(percent, 1),
+        load = round(load, 1),
         core_count = core_count,
         load_avg_1m = round(load_avg_1m, 1) if load_avg_1m is not None else None,
     )
@@ -112,7 +112,7 @@ def collect_memory() -> Memory:
     return Memory(
         total_gb = round(vm.total / GB, 1),
         used_gb = round(vm.used / GB, 1),
-        percent = round(vm.percent, 1),
+        used_percent = round(vm.percent, 1),
     )
 
 
@@ -153,7 +153,7 @@ def collect_disk() -> list[Disk]:
             mount = disk[0],
             total_gb = round(disk[1] / disk[3] / GB, 1), # divide by total partitions
             used_gb = round(disk[2] / GB, 1),
-            percent = round(disk[2] / disk[1] * disk[3] * 100, 1)
+            used_percent = round(disk[2] / disk[1] * disk[3] * 100, 1)
         )
         for _, disk in disks.items()
     ]

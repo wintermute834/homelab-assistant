@@ -104,7 +104,7 @@ Explore every python module in the environment using list_dir and read_file and 
 """
 
 
-harness = Harness("Qwen3.5-9B", orchestrator.tools.ALL, system_prompt, url)
+harness = Harness("Qwen3.5-9B", [orchestrator.tools.get_datetime_utc], system_prompt, url)
 
 while True:
     prompt = input("USER:\n")

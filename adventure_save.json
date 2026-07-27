@@ -1,0 +1,23 @@
+{
+  "player": {
+    "health": 55,
+    "max_health": 100,
+    "inventory": {
+      "gate_token": 1,
+      "ancient_gem": 1
+    },
+    "torch_lit": true,
+    "has_key": true,
+    "wolf_defeated": true,
+    "visited": [
+      "secret_sanctuary",
+      "stone_gate",
+      "dark_forest",
+      "forest_clearing"
+    ],
+    "current_enemy": null,
+    "enemy_health": 0,
+    "in_combat": false
+  },
+  "current_scene": "Stone Gate"
+}

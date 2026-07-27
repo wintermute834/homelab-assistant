@@ -44,7 +44,7 @@ class ToolMap:
 
 
 class Harness:
-    __slots__ = "client", "model", "tools", "tool_map", "messages", "system_prompt"
+    __slots__ = "client", "model", "tools", "tool_map", "messages", "system_message"
 
     def __init__(
             self,
@@ -60,10 +60,9 @@ class Harness:
         self.tools = tools
         self.tool_map = ToolMap(tools or [])
         self.messages: list[Message] = []
-        self.system_prompt = system_prompt
+        self.system_message = SystemMessage(content=system_prompt) if system_prompt is not None else None
 
-        if system_prompt is not None:
-            self.messages.append(SystemMessage(content = system_prompt))
+        self.clear_history()
 
     def send_message(self, user_message: str) -> list[Message]:
         start_index = len(self.messages)
@@ -105,9 +104,8 @@ class Harness:
         return self.messages[start_index:]
 
     def clear_history(self) -> None:
-        if self.system_prompt is None:
-            self.messages.clear()
+        self.messages.clear()
 
-        else:
-            self.messages = self.messages[:1]
+        if self.system_message is not None:
+            self.messages.append(self.system_message)
 

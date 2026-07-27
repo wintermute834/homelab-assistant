@@ -1,7 +1,9 @@
 
 import os
 from datetime import datetime, timezone
-from typing import Callable, Optional, Protocol
+from typing import Callable, Literal, Optional, Protocol
+
+from pydantic import BaseModel
 
 from llama_client import Tool
 from llama_client.types.json import JSON
@@ -12,7 +14,19 @@ class IOFuncType(Protocol):
     def __call__(self, **kwargs: JSON) -> JSON: ...
 
 
+class ModelGoal(BaseModel):
+    goal: str
+    description: str
+    complete_when: str
+    priority: Literal["low", "medium", "high"]
 
+
+
+goals: dict[str, ModelGoal] = {}
+
+
+
+# Functions
 def _get_datetime_utc() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -131,6 +145,63 @@ def _replace(*, file_path: str, old_string: str, new_string: str, replace_all: O
     return f"Pattern replaced successfully: '{file_path}'"
 
 
+def _add_goal(*, goal: str, description: str, complete_when: str, priority: Literal["low", "medium", "high"] = "low") -> str:
+    if goal in goals:
+        return f"Couldn't add goal. Goal with the same name already exists: '{goal}'"
+
+    goals[goal] = ModelGoal(
+        goal=goal,
+        description=description,
+        complete_when=complete_when,
+        priority=priority
+    )
+
+    return f"Goal successfully added!"
+
+
+def _remove_goal(*, goal: str) -> str:
+    if goal not in goals:
+        return f"Couldn't remove goal. No goal with the name: '{goal}'"
+
+    del goals[goal]
+
+    return f"Goal successfully completed!"
+
+
+def _edit_goal(*, goal: str, new_goal: Optional[str] = None, new_description: Optional[str] = None, new_complete_when: Optional[str] = None, new_priority: Optional[Literal["low", "medium", "high"]] = None) -> str:
+    if goal not in goals:
+        return f"Couldn't edit goal. No goal with the name: '{goal}'"
+
+    if new_description is not None:
+        goals[goal].description = new_description
+
+    if new_complete_when is not None:
+        goals[goal].complete_when = new_complete_when
+
+    if new_priority is not None:
+        goals[goal].priority = new_priority
+
+    if new_goal is not None:
+        goals[goal].goal = new_goal
+
+        goals[new_goal] = goals.pop(goal)
+
+    return f"Goal successfully edited!"
+
+
+def _get_goal(*, goal: str) -> str:
+    if goal not in goals:
+        return f"Couldn't get goal. No goal with the name: '{goal}'"
+
+    return goals[goal].model_dump_json()
+
+
+def _get_goals() -> list[str]:
+    return list(map(lambda goal: goal.model_dump_json(), goals.values()))
+
+
+
+# Tools
 get_datetime_utc = Tool(**{
     "definition": {
         "function": {
@@ -292,8 +363,135 @@ replace = Tool(**{
     "function": _replace
 })
 
-ALL = [
-    get_datetime_utc,
+add_goal = Tool(**{
+    "definition": {
+        "function": {
+            "name": "add_goal",
+            "description": "Adds a goal. If you are planning for a complex task, use goals to help simplify parts.",
+            "parameters": {
+                "properties": {
+                    "goal": {
+                        "type": "string",
+                        "description": "The goal you want to complete."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "A description of what the goal aims to accomplish."
+                    },
+                    "complete_when": {
+                        "type": "string",
+                        "description": "The requirements for the goal to be considered complete."
+                    },
+                    "priority": {
+                        "type": "string",
+                        "description": "How important the goal is. Can be \"low\" (default), \"medium\" or \"high\".",
+                        "enum": ["low", "medium", "high"]
+                    }
+                },
+                "required": [
+                    "goal",
+                    "description",
+                    "complete_when"
+                ]
+            }
+        }
+    },
+    "function": _add_goal
+})
+
+remove_goal = Tool(**{
+    "definition": {
+        "function": {
+            "name": "remove_goal",
+            "description": "Removes a goal. Should be used when a goal satisfies its `complete_when` parameter.",
+            "parameters": {
+                "properties": {
+                    "goal": {
+                        "type": "string",
+                        "description": "The goal you want to remove."
+                    }
+                },
+                "required": [
+                    "goal"
+                ]
+            }
+        }
+    },
+    "function": _remove_goal
+})
+
+edit_goal = Tool(**{
+    "definition": {
+        "function": {
+            "name": "edit_goal",
+            "description": "Edits the specified fields of a goal.",
+            "parameters": {
+                "properties": {
+                    "goal": {
+                        "type": "string",
+                        "description": "The goal you want to edit."
+                    },
+                    "new_goal": {
+                        "type": "string",
+                        "description": "The new name of the goal."
+                    },
+                    "new_description": {
+                        "type": "string",
+                        "description": "The new description for the goal."
+                    },
+                    "new_complete_when": {
+                        "type": "string",
+                        "description": "The new requirements for the goal to be considered complete."
+                    },
+                    "new_priority": {
+                        "type": "string",
+                        "description": "The new priority of the goal.",
+                        "enum": ["low", "medium", "high"]
+                    }
+                },
+                "required": [
+                    "goal"
+                ]
+            }
+        }
+    },
+    "function": _edit_goal
+})
+
+get_goal = Tool(**{
+    "definition": {
+        "function": {
+            "name": "get_goal",
+            "description": "Gets a goal by name.",
+            "parameters": {
+                "properties": {
+                    "goal": {
+                        "type": "string",
+                        "description": "The goal to get."
+                    }
+                },
+                "required": [
+                    "goal"
+                ]
+            }
+        }
+    },
+    "function": _get_goal
+})
+
+get_goals = Tool(**{
+    "definition": {
+        "function": {
+            "name": "get_goals",
+            "description": "Gets the list of goals you currently have."
+        }
+    },
+    "function": _get_goals
+})
+
+
+# Groupings
+FILES = [
     list_dir,
     read_file,
     create_file,
@@ -301,6 +499,18 @@ ALL = [
     append,
     replace
 ]
+
+GOALS = [
+    add_goal,
+    remove_goal,
+    edit_goal,
+    get_goal,
+    get_goals
+]
+
+ALL = [
+    get_datetime_utc,
+] + FILES + GOALS
 
 __all__ = [
     "get_datetime_utc",
@@ -310,5 +520,12 @@ __all__ = [
     "write",
     "append",
     "replace",
+    "add_goal",
+    "remove_goal",
+    "edit_goal",
+    "get_goal",
+    "get_goal",
+    "FILES",
+    "GOALS",
     "ALL"
 ]

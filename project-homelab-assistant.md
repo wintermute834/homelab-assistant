@@ -88,7 +88,7 @@ calls the LLM on rivendell, and sends alerts when rules fire.
 
 **LLM Layer** (rivendell / llama.cpp)
 `Qwen3.5-4B` handles the majority of conversational queries - it's fast and cheap for
-simple factual questions about structured data. `Qwen3.5-Mythos-9B` can be invoked for
+simple factual questions about structured data. `Qwen3.5-9B` can be invoked for
 queries that require interpreting logs or reasoning about code-level issues.
 No frontier model needed for this project.
 
@@ -149,12 +149,17 @@ All machines return the same top-level structure; fields that don't apply are nu
         {
           "name": "Qwen3.5-4B",
           "status": "loaded",
-          "has_vision": false
+          "modalities": [
+            "text"
+          ]
         },
         {
-          "name": "Qwen3.5-Mythos-9b",
+          "name": "Qwen3.5-9b",
           "status": "sleeping",
-          "has_vision": true
+          "has_vision": [
+            "text",
+            "vision"
+          ]
         },
         ...
       ]

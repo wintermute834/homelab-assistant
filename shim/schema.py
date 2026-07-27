@@ -9,8 +9,9 @@ schema stays consistent across the fleet. See project-homelab-assistant.md.
 from pydantic import BaseModel
 
 
+
 class Cpu(BaseModel):
-    percent: float
+    load: float
     core_count: int
     load_avg_1m: float | None  # None on platforms without load average (Windows)
 
@@ -18,14 +19,14 @@ class Cpu(BaseModel):
 class Memory(BaseModel):
     total_gb: float
     used_gb: float
-    percent: float
+    used_percent: float
 
 
 class Disk(BaseModel):
     mount: str
     total_gb: float
     used_gb: float
-    percent: float
+    used_percent: float
 
 
 class Gpu(BaseModel):
@@ -66,4 +67,3 @@ class Snapshot(BaseModel):
     network: Network
     services: Services
     uptime_hours: float
-

@@ -29,7 +29,7 @@ class Orchestrator:
     def __init__(self) -> None:
         self.harness = Harness(
             MODEL,
-            tools.ALL,
+            tools.FILES,
             SYSTEM_PROMPT,
             LLAMA_URL
         )
