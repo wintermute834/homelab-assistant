@@ -1,6 +1,0 @@
-
-fastapi
-httpx
-psutil
-pydantic
-uvicorn[standard]

@@ -1,4 +1,0 @@
-[submodule "shim"]
-	path = shim
-	url = https://github.com/wintermute834/homelab-shim.git
-	branch = main
