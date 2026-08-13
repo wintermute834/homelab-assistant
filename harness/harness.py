@@ -1,7 +1,7 @@
 
 import json
 import concurrent.futures as futures
-from typing import Optional
+from typing import Collection, Optional
 
 from llama_client import LlamaClient
 from llama_client.types.json import JSONObject
@@ -15,7 +15,7 @@ from llama_client.types.tool_defs import Tool
 class ToolMap:
     __slots__ = "map"
 
-    def __init__(self, tools: list[Tool]) -> None:
+    def __init__(self, tools: Collection[Tool]) -> None:
         self.map = {tool.definition.function.name: tool.function for tool in tools}
     
     def get_tool_response(self, tool_call: ToolCall) -> ToolResponseMessage:
@@ -49,7 +49,7 @@ class Harness:
     def __init__(
             self,
             model: str,
-            tools: Optional[list[Tool]] = None,
+            tools: Optional[Collection[Tool]] = None,
             system_prompt: Optional[str] = None,
             url: Optional[str] = None
         ) -> None:

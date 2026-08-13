@@ -10,7 +10,6 @@ import socket
 import time
 import re
 from datetime import datetime, timezone
-from typing import Any
 
 import httpx
 import psutil
@@ -84,14 +83,14 @@ def hostname() -> str:
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def collect_cpu() -> Cpu:
     # interval=None returns the load since the previous call; the daemon polls on a
     # schedule so successive samples are meaningful without blocking here.
     load = psutil.cpu_percent(interval=None)
-    core_count = psutil.cpu_count(logical=True) or 0
+    core_count = psutil.cpu_count(logical=True)
 
     try:
         load_avg_1m = psutil.getloadavg()[0] * 100 / (core_count or 1) # load is for all cores combined
@@ -101,7 +100,7 @@ def collect_cpu() -> Cpu:
 
     return Cpu(
         load = round(load, 1),
-        core_count = core_count,
+        core_count = core_count or 0,
         load_avg_1m = round(load_avg_1m, 1) if load_avg_1m is not None else None,
     )
 
@@ -117,7 +116,7 @@ def collect_memory() -> Memory:
 
 
 def collect_disk() -> list[Disk]:
-    disks: dict[str, tuple[str, int, int, int]] = {} # device: (mount, total_sum, used_sum, num_parts)
+    disks: dict[str, tuple[str, int, int, int]] = {} # {"device": ("mount", total_sum, used_sum, num_parts)}
 
     for part in psutil.disk_partitions(all=False):
         if not _is_real_disk(part.mountpoint, part.fstype): continue
@@ -160,7 +159,8 @@ def collect_disk() -> list[Disk]:
 
 
 def collect_gpu() -> Gpu | None:
-    """NVIDIA GPU via NVML. Returns None when no NVIDIA GPU or driver is present."""
+    """NVIDIA GPU statistics via NVML. Returns None when no NVIDIA GPU or driver is present."""
+
     try:
         import pynvml # type: ignore
     except ImportError:
@@ -221,7 +221,7 @@ def collect_llama() -> LlamaCppService | None:
     """
     Query the local llama.cpp API for running status and models.
 
-    `/v1/models` is the liveness signal: it lists every linked model and whether it is loaded
+    `/v1/models` lists every linked model its state.
 
     Returns None on machines that don't run llama.cpp (Mac Mini, Windows box) so the
     field reads as "not applicable" rather than "down".

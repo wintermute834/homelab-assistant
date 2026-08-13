@@ -110,7 +110,7 @@ All machines return the same top-level structure; fields that don't apply are nu
 ```json
 {
   "hostname": "rivendell",
-  "utc_timestamp": "2026-07-17T06:29:32Z",
+  "timestamp": "2026-07-17 06:29:32",
   "cpu": {
     "percent": 0.2,
     "core_count": 20,
@@ -267,7 +267,7 @@ this section governs what is and is not permitted.
 
 ### Permitted (read-only, pre-approved)
 - Return current system stats (already handled by shim - no extra risk)
-- Run `curl 192.168.0.210:8080/models`
+- Run `curl 192.168.0.0:8080/models`
 - Show recent log tail (specified log files only, not arbitrary paths)
 - Check if a service is running (`systemctl is-active <service>`)
 

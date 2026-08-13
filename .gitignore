@@ -1,6 +1,6 @@
 # Local-only infrastructure details - keep LAN topology out of the repo
 .lan_addresses.md
-orchestrator/lan_addresses.py
+lan_addresses.py
 
 # Python
 .venv/
@@ -26,3 +26,4 @@ Thumbs.db
 *.swp
 .idea/
 .vscode/
+server_query.bash

@@ -1,115 +1,18 @@
 
 import sqlite3
-from typing import Literal, Optional
-
-from pydantic import BaseModel
+from typing import Optional
 
 from shim.schema import Snapshot
-
-
-# """
-# CREATE TABLE cpu(
-#     percent     REAL,
-#     core_count  INT,
-#     load_avg_1m REAL
-# ) STRICT
-# """
-# """
-# CREATE TABLE memory(
-#     total_gb REAL,
-#     used_gb  REAL,
-#     used_pct REAL
-# ) STRICT
-# """
-# """
-# CREATE TABLE disk(
-#     mount    TEXT,
-#     total_gb REAL,
-#     used_gb  REAL,
-#     used_pct REAL
-# ) STRICT
-# """
-# """
-# CREATE TABLE gpu(
-#     name            TEXT,
-#     memory_total_mb INT,
-#     memory_used_mb  INT,
-#     utilization_pct INT,
-#     temp_celcius    INT
-# ) STRICT
-# """
-# """
-# CREATE TABLE network(
-#     interface TEXT
-# ) STRICT
-# """
-# """
-# CREATE TABLE services(
-#     interface TEXT
-# ) STRICT
-# """
-
-# CREATE_TABLE = """
-# CREATE TABLE snapshots(
-#     hostname  TEXT,
-#     timestamp TEXT,
-#     cpu INT,
-#     memory INT,
-#     disk_start INT,
-#     disk_end INT,
-#     gpu INT,
-#     network_start INT,
-#     network_end INT,
-#     network_available INT,
-
-# ) STRICT
-# """
 
 
 
 SNAPSHOTS = """
 CREATE TABLE IF NOT EXISTS snapshots (
-    hostname  INTEGER NOT NULL,  -- mapped to an integer using `hostnames`
+    hostname  TEXT NOT NULL,
     timestamp TEXT NOT NULL,
     snapshot  TEXT NOT NULL
 ) STRICT
 """
-
-HOSTNAMES = """
-CREATE TABLE IF NOT EXISTS hostnames (
-    id       INTEGER PRIMARY KEY AUTOINCREMENT,
-    hostname TEXT NOT NULL UNIQUE
-) STRICT
-"""
-
-
-
-class TimestampFilter(BaseModel):
-    before: Optional[str] = None
-    after: Optional[str] = None
-
-    def get_filter(self) -> tuple[str, tuple[str, ...]]:
-        match self.before, self.after:
-            case None, None:
-                raise Exception("Invalid filter. Must have at least one of `before` or `after` set.")
-
-            case before, None:
-                return "timestamp < ?", (before,)
-
-            case None, after:
-                return "timestamp > ?", (after,)
-
-            case before, after:
-                return "BETWEEN ? and ?", (before, after)
-
-
-class Like(BaseModel):
-    pattern: str
-
-
-class OrderBy(BaseModel):
-    column: Literal["hostname", "timestamp"]
-    order: Literal["ASC", "DESC"] = "ASC"
 
 
 
@@ -119,77 +22,103 @@ class SnapshotDatabase:
         cursor = self.connection.cursor()
 
         cursor.execute(SNAPSHOTS)
-        cursor.execute(HOSTNAMES)
 
 
     def _commit(self) -> None:
         self.connection.commit()
 
 
-    def get_hostname_id(self, hostname: str) -> int:
-        cursor = self.connection.cursor()
-
-        cursor.execute("INSERT OR IGNORE INTO hostnames (hostname) VALUES (?)", (hostname,))
-        self._commit()
-
-        cursor.execute("SELECT id FROM hostnames WHERE hostname = ?", (hostname,))
-        result: tuple[int] = cursor.fetchone()
-
-        return result[0]
-
-
     def insert_snapshot(self, snapshot: Snapshot) -> None:
         cursor = self.connection.cursor()
 
         cursor.execute("INSERT INTO snapshots VALUES (?, ?, ?)", (
-            self.get_hostname_id(snapshot.hostname),
+            snapshot.hostname,
             snapshot.utc_timestamp,
             snapshot.model_dump_json()
         ))
         self._commit()
 
 
-    def select(
-            self,
-            where: str,
-            order_by: str = "timestamp DESC",
-            max_values: Optional[int] = None
-        ) -> list[str]:
-
+    def get_hostnames(self) -> list[str]:
         cursor = self.connection.cursor()
 
-        cursor.execute(f"SELECT snapshot FROM snapshots WHERE {where} ORDER BY {order_by}")
+        cursor.execute("SELECT DISTINCT hostname FROM snapshots")
+        result: list[tuple[str]] | None = cursor.fetchall()
+
+        return [] if result is None else [i[0] for i in result]
+
+
+    def get_newest(self, hostnames: Optional[list[str]] = None) -> list[str]:
+        cursor = self.connection.cursor()
+        out = []
+
+        for hostname in hostnames if hostnames is not None else self.get_hostnames():
+            cursor.execute(f"SELECT snapshot FROM snapshots WHERE hostname = ? ORDER BY timestamp DESC LIMIT 1", (hostname,))
+            result: tuple[str] | None = cursor.fetchone()
+
+            if result is not None:
+                out.append(result[0])
+
+        return out
+
+
+    def _execute(self, command: str) -> list[tuple[str]]:
+        cursor = self.connection.cursor()
+
+        cursor.execute(command)
         result: list[tuple[str]] = cursor.fetchall()
 
-        return [i[0] for i in result[:max_values]]
+        return result
 
 
-    def select_snapshots(
+    def get_snapshots(
             self,
-            hostnames: list[str] | Literal["all"] = "all",
-            timestamp_filter: Optional[TimestampFilter] = None,
-            snapshot_like: Optional[Like] = None,
-            order_by: OrderBy = OrderBy(column="timestamp", order="DESC"),
-            max_values: Optional[int] = None
+            hostnames: Optional[list[str]] = None,
+            start_timestamp: Optional[str] = None,
+            end_timestamp: Optional[str] = None,
+            new_to_old: bool = True,
+            max_results: int = -1,
+            print_sql: bool = True
         ) -> list[str]:
 
         cursor = self.connection.cursor()
 
         sql = "SELECT snapshot FROM snapshots"
         args = []
+        conjunction = "WHERE"
 
-        match hostnames, timestamp_filter:
-            case "all", None:
+        if hostnames is not None:
+            sql += f" {conjunction} hostname in ({", ".join(["?"] * len(hostnames))})"
+            args.extend(hostnames)
+            conjunction = "AND"
+
+        match start_timestamp, end_timestamp:
+            case None, None:
                 pass
 
-            case "all", filter:
-                sql += " WHERE "
+            case start, None:
+                sql += f" {conjunction} timestamp >= ?"
+                args.append(start)
+                conjunction = "AND"
 
+            case None, end:
+                sql += f" {conjunction} timestamp <= ?"
+                args.append(end)
+                conjunction = "AND"
 
-        hostnames_filter = "" if hostnames == "all" else " hostname IN "
+            case start, end:
+                sql += f" {conjunction} timestamp BETWEEN ? and ?"
+                args.extend((start, end))
+                conjunction = "AND"
+
+        # add ordering and max_values
+        sql += f" ORDER BY timestamp {"DESC" if new_to_old else "ASC"}"
+        sql += f" LIMIT {max_results}"
+
+        if print_sql: print(f"SQL: {sql}\nARGS: {args}\n")
 
         cursor.execute(sql, args)
         result: list[tuple[str]] = cursor.fetchall()
 
-        return [i[0] for i in result[:max_values]]
+        return [res[0] for res in result]
 

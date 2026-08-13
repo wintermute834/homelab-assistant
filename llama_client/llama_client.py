@@ -19,14 +19,19 @@ class LlamaClient:
     __slots__ = "url"
 
     def __init__(self, url: Optional[str] = None) -> None:
-        self.url = url or "http://localhost:8080"
+        """
+        Creates a client to the llama server at the given url.
+
+        If `url` is not specified, it defaults to http://localhost:8080
+        """
+
+        self.url = "http://localhost:8080" if url is None else url
 
     def health(self) -> bool:
         """
         Returns the health of the llama.cpp server, `True` when the server is running `False` otherwise.
-
-        The default `url` is http://localhost:8080
         """
+
         try:
             response = httpx.get(f"{self.url}/health")
             response.raise_for_status()
@@ -48,7 +53,7 @@ class LlamaClient:
             f"{self.url}/v1/chat/completions",
             headers = {"Content-Type": "application/json"},
             json = query.model_dump(exclude_none=True),
-            timeout = httpx.Timeout(10, read=None) # unlimited read time
+            timeout = httpx.Timeout(10, read=None) # unlimited read time because model can take long times
         )
         response.raise_for_status()
 

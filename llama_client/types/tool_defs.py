@@ -7,7 +7,7 @@ from .json import JSON
 
 
 
-type Parameter = Object | Array | Other
+type Parameter = Object | Array | Primitive
 
 
 class Object(BaseModel):
@@ -20,10 +20,10 @@ class Object(BaseModel):
 class Array(BaseModel):
     type: Literal["array"] = "array"
     description: Optional[str] = None
-    items: list[Parameter]
+    items: Parameter
 
 
-class Other(BaseModel):
+class Primitive(BaseModel):
     type: Literal["string", "number", "boolean", "null"]
     description: Optional[str] = None
 

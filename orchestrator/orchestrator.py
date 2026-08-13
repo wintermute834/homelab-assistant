@@ -1,12 +1,13 @@
 
+from database import SnapshotDatabase
 from harness import Harness
 
-from . import lan_addresses
+from lan_addresses import *
 from . import tools
 
 
 
-MODEL = "Qwen3.5-4B"
+MODEL = "LFM2.5-2.6B"
 SYSTEM_PROMPT = """
 You are a homelab infrastructure assistant.
 You have access to real-time and historical data from four machines:
@@ -15,22 +16,26 @@ You have access to real-time and historical data from four machines:
 - ilum (Windows 11, dev workstation),
 - caladan (Linux, Santa Picker web host)
 
-Current state data is provided as JSON. Answer questions factually based on this data.
+State data can be retrieved using tool calls, and is returned as JSON data.
+When retrieving state data, always use the exact hostnames outlined above.
 If the data does not contain enough information to answer, say so - do not guess.
 
-Current snapshot:
-[{},{},{},{}]
+Your location is Denver, CO.
+
+Don't use markdown formatting when answering.
 """
-LLAMA_URL = "http://192.168.0.210:8080"
 
 
 
 class Orchestrator:
     def __init__(self) -> None:
+        self.database = SnapshotDatabase()
+
         self.harness = Harness(
             MODEL,
-            tools.FILES,
+            [tools.get_datetime_utc, tools.get_snapshots],
             SYSTEM_PROMPT,
             LLAMA_URL
         )
+
 

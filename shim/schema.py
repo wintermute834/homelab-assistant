@@ -59,8 +59,8 @@ class Services(BaseModel):
 
 class Snapshot(BaseModel):
     hostname: str
-    utc_timestamp: str  # UTC format, e.g. 2025-07-15T14:32:00Z
-    cpu: Cpu
+    utc_timestamp: str  # sortable format YYYY-MM-DD HH:MM:SS
+    cpu: Cpu            #            e.g. 2026-08-12 00:23:12
     memory: Memory
     disk: list[Disk]
     gpu: Gpu | None
