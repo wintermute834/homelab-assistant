@@ -2,7 +2,7 @@
 curl -s http://192.168.0.210:8080/v1/chat/completions \
     -H "Content-Type: application/json" \
     -d '{
-        "model": "Qwen3.5-4B",
+        "model": "LFM2.5-2.6B",
         "tools": [
             {
                 "type": "function",

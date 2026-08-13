@@ -1,3 +1,6 @@
+"""
+Tools for getting information from the database.
+"""
 
 from typing import Optional
 

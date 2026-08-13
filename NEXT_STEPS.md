@@ -93,7 +93,7 @@ recreate it per-target (next step).
 ### Validate in the output (this is the real M2 check)
 - `gpu` → name, `memory_used_mb`, `utilization_percent`, `temperature_c` all populated (NOT null)
 - `services.llama_cpp` → `running: true`; `models` lists installed models
-  (`Qwen3.5-4B`, `Qwen3.5-Mythos-9B`) and their status/capabilities
+  (`LFM2.5-2.6B`, `Qwen3.5-9B`) and their status/capabilities
 - `disk` → real volumes only, no snap/loop noise
 - `hostname` → `rivendell`
 

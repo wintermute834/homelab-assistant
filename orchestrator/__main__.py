@@ -11,7 +11,6 @@ from orchestrator import Orchestrator
 orchestrator = Orchestrator()
 
 
-
 while True:
     prompt = input("USER:\n")
 

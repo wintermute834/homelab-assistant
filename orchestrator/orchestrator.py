@@ -1,3 +1,8 @@
+"""
+The orchestrator for the system.
+
+Collects snapshots every minute and 
+"""
 
 from threading import Event, Lock, Thread
 

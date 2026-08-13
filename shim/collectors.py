@@ -14,17 +14,9 @@ from datetime import datetime, timezone
 import httpx
 import psutil
 
-from .schema import (
-    Cpu,
-    Disk,
-    Gpu,
-    Memory,
-    Network,
-    Model,
-    LlamaCppService,
-    Services,
-    Snapshot,
-)
+from schema import *
+
+
 
 MB = 1024**2
 GB = 1024**3
@@ -273,7 +265,6 @@ def collect_llama() -> LlamaCppService | None:
         running = True,
         models = models
     )
-
 
 
 def collect_snapshot() -> Snapshot:

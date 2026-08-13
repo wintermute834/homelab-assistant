@@ -87,7 +87,7 @@ store, listens for user input, constructs prompts from current and historical st
 calls the LLM on rivendell, and sends alerts when rules fire.
 
 **LLM Layer** (rivendell / llama.cpp)
-`Qwen3.5-4B` handles the majority of conversational queries - it's fast and cheap for
+`LFM2.5-2.6B` handles the majority of conversational queries - it's fast and cheap for
 simple factual questions about structured data. `Qwen3.5-9B` can be invoked for
 queries that require interpreting logs or reasoning about code-level issues.
 No frontier model needed for this project.
@@ -147,7 +147,7 @@ All machines return the same top-level structure; fields that don't apply are nu
       "running": true,
       "models": [
         {
-          "name": "Qwen3.5-4B",
+          "name": "LFM2.5-2.6B",
           "status": "loaded",
           "modalities": [
             "text"
@@ -350,8 +350,8 @@ No heavy frameworks. Keep dependencies minimal and explicit.
 
 *Log decisions here as the project evolves.*
 
-- **LLM for queries:** `Qwen3.5-4B` (fast, sufficient for structured-data QA)
-- **LLMs for log analysis / complex queries:** `Qwen3.5-Mythos-9b`, `GPT-oss-20b`, `Qwen3.6-27b`
+- **LLM for queries:** `LFM2.5-2.6B` (fast, sufficient for structured-data QA)
+- **LLMs for log analysis / complex queries:** `Qwen3.5-9B`, `Qwen3.6-27b`
 - **Polling interval:** 60 seconds (adjustable per machine in config)
 - **History retention:** 30 days (older rows pruned by a nightly cleanup job)
 - **Shim port:** TBD (choose something above 8000, document in config)
