@@ -6,24 +6,9 @@ lan_addresses.py
 .venv/
 __pycache__/
 *.py[cod]
-*.egg-info/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
 
-# Environment / secrets
-.env
-.env.*
-
-# SQLite history store (orchestrator, future)
+# SQLite
 *.db
-*.sqlite
-*.sqlite3
 
-# OS / editor cruft
-.DS_Store
-Thumbs.db
-*.swp
-.idea/
+# Editor
 .vscode/
-server_query.bash

@@ -1,7 +1,7 @@
 
 import os
 
-from database.database import SnapshotDatabase
+from orchestrator.database import SnapshotDatabase
 from lan_addresses import *
 
 

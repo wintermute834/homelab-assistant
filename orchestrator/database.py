@@ -2,7 +2,7 @@
 import sqlite3
 from typing import Optional
 
-from shim.schema import Snapshot
+from shim import Snapshot
 
 
 
@@ -17,8 +17,10 @@ CREATE TABLE IF NOT EXISTS snapshots (
 
 
 class SnapshotDatabase:
+    __slots__ = "connection", "cursor"
+
     def __init__(self) -> None:
-        self.connection = sqlite3.connect("test.db")
+        self.connection = sqlite3.connect("snapshots.db", check_same_thread=False)
         cursor = self.connection.cursor()
 
         cursor.execute(SNAPSHOTS)
@@ -78,7 +80,7 @@ class SnapshotDatabase:
             end_timestamp: Optional[str] = None,
             new_to_old: bool = True,
             max_results: int = -1,
-            print_sql: bool = True
+            print_sql: bool = False
         ) -> list[str]:
 
         cursor = self.connection.cursor()

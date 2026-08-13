@@ -2,7 +2,7 @@
 import json
 
 from orchestrator import tools
-from harness import Harness
+from orchestrator.harness import Harness
 from lan_addresses import LLAMA_URL
 
 
@@ -51,12 +51,12 @@ Read the readme and explain the project.
 
 Explore every python module in the environment using list_dir and read_file and report back with your findings. Ignore the .venv modules.
 
-I am updating the codebase in your current directory. I want you to recursively search the directory for all python files and then for each file start a subagent that has the prompt: "update the python file {exact file path} to have documentation for all classes and functions. Additionally, add/update the __slots__ for all non-pydantic classes to have the correct attribute names." Give subagents access to all file-editing tools.
+I am updating the codebase in your current directory. I want you to recursively search in the current folder for all python files not in the base directory. Then, for each file, start a subagent that has the prompt: "update the python file {exact file path} so that all non-pydantic classes (pydantic classes are those that subclass `BaseModel`) have the correct __slots__ implementation for their variables. Use double quotes and don't parenthesize the list. If the file has no classes, don't update anything." Give subagents access to all file-editing tools.
 """
 
-# model = "LFM2.5-2.6B"
+model = "LFM2.5-2.6B"
 # model = "Qwen3.5-4B"
-model = "Qwen3.5-9B"
+# model = "Qwen3.5-9B"
 harness = Harness(model, tools.file_tools + (tools.get_datetime_utc, tools.query_subagent), system_prompt, LLAMA_URL)
 
 while True:

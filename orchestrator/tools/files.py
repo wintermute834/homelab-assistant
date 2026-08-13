@@ -2,8 +2,7 @@
 import os
 from typing import Callable, Optional, Protocol
 
-from llama_client import Tool
-from llama_client.types.json import JSON
+from ..harness import Tool, JSON
 
 
 

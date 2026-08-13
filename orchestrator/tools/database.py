@@ -1,14 +1,14 @@
 
 from typing import Optional
 
-from database import SnapshotDatabase
-from llama_client import Tool
+from ..database import SnapshotDatabase
+from ..harness import Tool
 
 
 
 __all__ = (
     "get_newest_snapshots",
-    "get_snapshots",
+    "filter_snapshots",
     "database_tools"
 )
 
@@ -21,7 +21,7 @@ def _get_newest_snapshots() -> list[str]:
     return DATABASE.get_newest()
 
 
-def _get_snapshots(
+def _filter_snapshots(
         *,
         hostnames: Optional[list[str]] = None,
         start_timestamp: Optional[str] = None,
@@ -44,10 +44,10 @@ get_newest_snapshots = Tool(**{
     "function": _get_newest_snapshots
 })
 
-get_snapshots = Tool(**{
+filter_snapshots = Tool(**{
     "definition": {
         "function": {
-            "name": "get_snapshots",
+            "name": "filter_snapshots",
             "description": "Gets historical snapshots from specific machines in an optional time range. All timestamps should be in utc format: \"YYYY-MM-DD HH:MM:SS\".",
             "parameters": {
                 "properties": {
@@ -78,13 +78,13 @@ get_snapshots = Tool(**{
             }
         }
     },
-    "function": _get_snapshots
+    "function": _filter_snapshots
 })
 
 
 # Collection of all database tools
 database_tools = (
     get_newest_snapshots,
-    get_snapshots
+    filter_snapshots
 )
 

@@ -3,12 +3,12 @@ import json
 import concurrent.futures as futures
 from typing import Collection, Optional
 
-from llama_client import LlamaClient
-from llama_client.types.json import JSONObject
-from llama_client.types.messages import Message, SystemMessage, ToolResponseMessage, UserMessage
-from llama_client.types.query import Query
-from llama_client.types.tool_calls import ToolCall
-from llama_client.types.tool_defs import Tool
+from .llama_client import LlamaClient
+from .types.json import JSONObject
+from .types.messages import Message, SystemMessage, ToolResponseMessage, UserMessage
+from .types.query import Query
+from .types.tool_calls import ToolCall
+from .types.tool_defs import Tool
 
 
 

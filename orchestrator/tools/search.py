@@ -4,7 +4,7 @@ from typing import Iterable, Optional, cast
 import googlesearch
 from pydantic import BaseModel
 
-from llama_client import Tool
+from ..harness import Tool
 
 
 

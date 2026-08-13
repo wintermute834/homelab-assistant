@@ -99,9 +99,9 @@ def collect_cpu() -> Cpu:
         load_avg_1m = None  # not available on stock Windows
 
     return Cpu(
-        load = round(load, 1),
         core_count = core_count or 0,
-        load_avg_1m = round(load_avg_1m, 1) if load_avg_1m is not None else None,
+        load_percent = round(load, 1),
+        load_percent_avg_1m = round(load_avg_1m, 1) if load_avg_1m is not None else None,
     )
 
 

@@ -11,9 +11,9 @@ from pydantic import BaseModel
 
 
 class Cpu(BaseModel):
-    load: float
     core_count: int
-    load_avg_1m: float | None  # None on platforms without load average (Windows)
+    load_percent: float
+    load_percent_avg_1m: float | None  # None on platforms without load average (Windows)
 
 
 class Memory(BaseModel):
