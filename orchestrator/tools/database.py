@@ -27,10 +27,10 @@ def _filter_snapshots(
         start_timestamp: Optional[str] = None,
         end_timestamp: Optional[str] = None,
         new_to_old: bool = True,
-        max_results: int = 4
+        max_results: int = 5
     ) -> list[str]:
 
-    return DATABASE.get_snapshots(hostnames, start_timestamp, end_timestamp, new_to_old, max(1, min(128, max_results)))
+    return DATABASE.get_snapshots(hostnames, start_timestamp, end_timestamp, new_to_old, max(1, min(120, max_results)))
 
 
 # Tool definiitons
@@ -48,7 +48,7 @@ filter_snapshots = Tool(**{
     "definition": {
         "function": {
             "name": "filter_snapshots",
-            "description": "Gets historical snapshots from specific machines in an optional time range. All timestamps should be in utc format: \"YYYY-MM-DD HH:MM:SS\".",
+            "description": "Gets historical snapshots from specific machines in a time range. All timestamps should be in utc format: \"YYYY-MM-DD HH:MM:SS\".",
             "parameters": {
                 "properties": {
                     "hostnames": {
@@ -66,13 +66,13 @@ filter_snapshots = Tool(**{
                         "type": "string",
                         "description": "The end of the timestamp range. Defaults to the newest snapshot if unspecified."
                     },
-                    "newest_to_old": {
+                    "new_to_old": {
                         "type": "boolean",
                         "description": "Sorts results from newest timestamp to oldest when true, and oldest to newest when false. Defaults to true."
                     },
                     "max_results": {
                         "type": "number",
-                        "description": "The maximum number of snapshots to return. Defaults to 4 and is capped at 128."
+                        "description": "The maximum number of snapshots to return. Defaults to 5 and is capped at 120."
                     }
                 }
             }
