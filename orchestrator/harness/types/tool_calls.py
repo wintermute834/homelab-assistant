@@ -1,7 +1,11 @@
+"""
+Pydantic models for model tool calling.
+"""
 
 from typing import Literal
 
 from pydantic import BaseModel
+
 
 
 class CallFunction(BaseModel):

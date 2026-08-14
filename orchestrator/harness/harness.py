@@ -1,3 +1,8 @@
+"""
+An LLM harness that connects to llama.cpp.
+
+Has multi-turn tool use
+"""
 
 import json
 import concurrent.futures as futures
@@ -5,7 +10,7 @@ from typing import Collection, Optional
 
 from .llama_client import LlamaClient
 from .types.json import JSONObject
-from .types.messages import Message, SystemMessage, ToolResponseMessage, UserMessage
+from .types.messages import AssistantMessage, Message, SystemMessage, ToolResponseMessage, UserMessage
 from .types.query import Query
 from .types.tool_calls import ToolCall
 from .types.tool_defs import Tool
@@ -44,14 +49,15 @@ class ToolMap:
 
 
 class Harness:
-    __slots__ = "client", "model", "tools", "tool_map", "messages", "system_message"
+    __slots__ = "client", "model", "tools", "tool_map", "messages", "system_message", "keep_reasoning"
 
     def __init__(
             self,
             model: str,
             tools: Optional[Collection[Tool]] = None,
             system_prompt: Optional[str] = None,
-            url: Optional[str] = None
+            url: Optional[str] = None,
+            keep_reasoning: bool = False
         ) -> None:
 
         self.client = LlamaClient(url)
@@ -61,6 +67,7 @@ class Harness:
         self.tool_map = ToolMap(tools or [])
         self.messages: list[Message] = []
         self.system_message = SystemMessage(content=system_prompt) if system_prompt is not None else None
+        self.keep_reasoning = keep_reasoning
 
         self.clear_history()
 
@@ -101,11 +108,19 @@ class Harness:
             else:
                 break
 
-        return self.messages[start_index:]
+        out = []
+
+        for i, message in enumerate(self.messages[start_index:], start_index):
+            out.append(message)
+
+            # remove reasoning from assistant messages if flag is False
+            if not self.keep_reasoning and isinstance(message, AssistantMessage):
+                self.messages[i] = message.without_reasoning()
+
+        return out
 
     def clear_history(self) -> None:
         self.messages.clear()
 
         if self.system_message is not None:
             self.messages.append(self.system_message)
-

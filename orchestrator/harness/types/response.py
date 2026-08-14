@@ -1,3 +1,6 @@
+"""
+Pydantic models for the responses from the llama.cpp server.
+"""
 
 from typing import Literal, Optional
 
@@ -46,4 +49,3 @@ class ServerResponse(BaseModel):
     usage: Usage
     id: str
     timings: Timings
-

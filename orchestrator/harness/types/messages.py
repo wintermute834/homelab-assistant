@@ -1,5 +1,8 @@
+"""
+Pydantic models for the various types of message the model can recieve/create.
+"""
 
-from typing import Literal, Optional, TypeAlias
+from typing import Literal, Optional, Self, TypeAlias
 
 from pydantic import BaseModel
 
@@ -22,6 +25,14 @@ class AssistantMessage(BaseModel):
     content: str
     reasoning_content: Optional[str] = None
     tool_calls: Optional[list[ToolCall]] = None
+
+    def without_reasoning(self) -> Self:
+        return self.__class__(
+            role=self.role,
+            content=self.content,
+            reasoning_content=None,
+            tool_calls=self.tool_calls
+        )
 
 
 class ToolResponseMessage(BaseModel):

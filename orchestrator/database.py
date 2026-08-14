@@ -1,3 +1,6 @@
+"""
+A simple SQLite database for storing system snapshots based on machine and timestamp.
+"""
 
 import sqlite3
 from typing import Optional

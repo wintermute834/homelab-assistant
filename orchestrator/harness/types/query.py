@@ -1,3 +1,6 @@
+"""
+A Pydantic model for querys to llama.cpp.
+"""
 
 from typing import Optional
 

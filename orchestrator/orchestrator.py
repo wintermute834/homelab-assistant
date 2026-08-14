@@ -1,7 +1,9 @@
 """
 The orchestrator for the system.
 
-Collects snapshots every minute and 
+Collects snapshots every minute and stores them in a database.
+
+The harnessed model can the access the most recent snapshots and filter based on specific timestamps.
 """
 
 from threading import Event, Lock, Thread
@@ -63,7 +65,7 @@ If the data does not contain enough information to answer, say so - do not guess
 
 Your location is Denver, CO.
 
-Never use markdown formatting in answers.
+Don't use markdown formatting in answers.
 """
 
 

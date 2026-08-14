@@ -1,3 +1,6 @@
+"""
+Pydantic models for tool definitions that are given to the model.
+"""
 
 from typing import Callable, Literal, Optional
 
