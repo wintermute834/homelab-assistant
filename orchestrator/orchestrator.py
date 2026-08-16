@@ -6,14 +6,14 @@ Collects snapshots every minute and stores them in a database.
 The harnessed model can the access the most recent snapshots and filter based on specific timestamps.
 """
 
-from threading import Event, Lock, Thread
+from threading import Event, Thread
 
-from lan_addresses import *
 from shim import get_shim
 
 from . import tools
-from .harness import Harness
 from .database import SnapshotDatabase
+from .harness import Harness
+from .lan_addresses import *
 
 
 
@@ -22,12 +22,12 @@ MODEL = "LFM2.5-2.6B"
 SYSTEM_PROMPT = """
 You are a homelab infrastructure assistant.
 You have access to real-time and historical data (snapshots) from four machines:
-- rivendell (Linux, primary compute, llama.cpp, RTX 5070 Ti GPU),
+- rivendell (Headless Linux server, primary compute, llama.cpp, RTX 5070 Ti GPU),
 - ChibaCity (macOS, orchestration node),
 - ilum (Windows 11, dev workstation),
 - caladan (Linux, Santa Picker web host)
 
-Snapshots are formatted in json and have the following information:
+Snapshots are formatted in JSON and have the following information:
 - Hostname
 - UTC-0 timestamp
 - CPU
@@ -59,6 +59,7 @@ Snapshots are formatted in json and have the following information:
 
 All percentages in snapshots are out of 100, so a value of 0.5 would mean 0.5% not 50%.
 Snapshot data is collected every minute from each machine and can be accessed using tool calls.
+If snapshot data is missing for a machine it is likely offline or not set up yet.
 When retrieving snapshots, always use the exact hostnames outlined above.
 If the user asks about current information, always use `get_newest_snapshots`.
 If the data does not contain enough information to answer, say so - do not guess.
@@ -71,15 +72,14 @@ Don't use markdown formatting in answers.
 
 
 class Orchestrator:
-    __slots__ = "database", "_database_lock", "harness", "collection_stop", "collection_thread"
+    __slots__ = "database", "harness", "collection_stop", "collection_thread"
 
     def __init__(self) -> None:
         self.database = SnapshotDatabase()
-        self._database_lock = Lock()
 
         self.harness = Harness(
             MODEL,
-            tools.database_tools + (tools.get_datetime_utc,),
+            tools.all,
             SYSTEM_PROMPT,
             LLAMA_URL
         )
@@ -128,5 +128,4 @@ class Orchestrator:
         snapshot = get_shim(shim_url)
 
         if snapshot is not None:
-            with self._database_lock:
-                self.database.insert_snapshot(snapshot)
+            self.database.insert_snapshot(snapshot)

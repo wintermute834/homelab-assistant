@@ -1,3 +1,6 @@
+"""
+An client that connects to a llama.cpp server and sends/recieves queries.
+"""
 
 from typing import Optional
 

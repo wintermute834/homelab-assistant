@@ -1,5 +1,4 @@
 # Local-only infrastructure details - keep LAN topology out of the repo
-.lan_addresses.md
 lan_addresses.py
 
 # Python
@@ -12,3 +11,4 @@ __pycache__/
 
 # Editor
 .vscode/
+_chat_test.py

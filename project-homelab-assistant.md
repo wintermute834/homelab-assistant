@@ -2,8 +2,9 @@
 
 ## Goal
 
-Build a conversational agent that knows the home infrastructure - rivendell, the Mac Mini,
-and the Windows dev box - and can answer natural language questions about system state,
+Build a conversational agent that knows the home infrastructure - rivendell, caladan,
+the Mac Mini, and the Windows dev box - and can answer natural language questions
+about system state,
 running services, and resource usage. Optionally execute a small set of pre-approved safe
 commands on request.
 
@@ -110,23 +111,23 @@ All machines return the same top-level structure; fields that don't apply are nu
 ```json
 {
   "hostname": "rivendell",
-  "timestamp": "2026-07-17 06:29:32",
+  "utc_timestamp": "2026-07-17 06:29:32",
   "cpu": {
-    "percent": 0.2,
     "core_count": 20,
-    "load_avg_1m": 0.06
+    "load_percent": 0.2,
+    "load_percent_avg_1m": 6.0
   },
   "memory": {
     "total_gb": 31.1,
     "used_gb": 3.4,
-    "percent": 10.9
+    "used_percent": 10.9
   },
   "disk": [
     {
       "mount": "/",
       "total_gb": 1688.0,
       "used_gb": 146.5,
-      "percent": 8.7
+      "used_percent": 8.7
     }
   ],
   "gpu": {
@@ -149,14 +150,14 @@ All machines return the same top-level structure; fields that don't apply are nu
         {
           "name": "LFM2.5-2.6B",
           "status": "loaded",
-          "modalities": [
+          "input_modalities": [
             "text"
           ]
         },
         {
           "name": "Qwen3.5-9b",
           "status": "sleeping",
-          "has_vision": [
+          "input_modalities": [
             "text",
             "vision"
           ]
@@ -176,8 +177,9 @@ should be returned as `null`, not omitted, so the schema stays consistent.
 
 ## Shim Implementation Notes
 
-**Library:** `psutil` for CPU/memory/disk. `pynvml` or `nvidia-smi` subprocess call for GPU
-(rivendell only). llama.cpp running status via `localhost:8080/models`
+**Library:** `psutil` for CPU/memory/disk. `pynvml` for GPU metrics (rivendell only).
+llama.cpp running status and model list via the local `localhost:8080/v1/models`
+endpoint.
 
 **Transport:** Simple HTTP server (FastAPI) listening on a LAN port.
 Not exposed to the internet. Local network only.
@@ -208,8 +210,14 @@ When the user asks a question:
 2. Fetch relevant history (e.g., last 24 hours of snapshots) if the query is time-based
 3. Construct a prompt: system context describing the infrastructure + current state JSON
    + historical summary if relevant + user question
-4. Send to llama.cpp on rivendell (`Qwen3.5-4B` by default)
+4. Send to llama.cpp on rivendell (`LFM2.5-2.6B` by default)
 5. Return response to user
+
+**Update (M4, implemented):** current state is not injected into the prompt. The
+model receives tools instead - `get_newest_snapshots`, `filter_snapshots`
+(hostname + UTC timestamp range), and `get_datetime_utc` - and fetches whatever
+state it needs. See `orchestrator/tools/` and the harness in
+`orchestrator/harness/`.
 
 **System prompt template (starting point):**
 ```
@@ -243,7 +251,7 @@ alerts:
 
   - name: rivendell_disk_warning
     machine: rivendell
-    field: disk[0].percent
+    field: disk[0].used_percent
     condition: ">"
     threshold: 80
     cooldown_minutes: 120
@@ -298,8 +306,9 @@ decides *whether it is allowed*. The LLM should never be in the path of permissi
 | `httpx` | Orchestrator polling shims and llama.cpp |
 | `SQLite` (via `sqlite3`) | History store on Mac Mini |
 | `llama-server` | LLM inference on rivendell |
-| `schedule` | Polling loop on orchestrator |
-| `click` or `argparse` | CLI interface |
+| `pydantic` | Snapshot contract, harness message/tool models |
+| `threading` | Polling loop on orchestrator (one thread per shim, 60 s) |
+| Plain `input()` loop | CLI interface (`python -m orchestrator`) |
 | YAML config | Alert rules, machine registry |
 
 No heavy frameworks. Keep dependencies minimal and explicit.
@@ -327,7 +336,7 @@ No heavy frameworks. Keep dependencies minimal and explicit.
 | Milestone | Description | Target week |
 |---|---|---|
 | M1 | Shim running on rivendell, returning valid JSON | Week 2 |
-| M2 | Shims running on all three machines | Week 3 |
+| M2 | Shims running on all four machines | Week 3 |
 | M3 | Mac Mini orchestrator polling all shims; writing to SQLite | Week 4 |
 | M4 | First LLM query working end-to-end (ask a question, get an answer) | Week 5–6 |
 | M5 | Alert rules defined and firing correctly | Week 7 |
@@ -350,23 +359,25 @@ No heavy frameworks. Keep dependencies minimal and explicit.
 
 *Log decisions here as the project evolves.*
 
-- **LLM for queries:** `LFM2.5-2.6B` (fast, sufficient for structured-data QA)
-- **LLMs for log analysis / complex queries:** `Qwen3.5-9B`, `Qwen3.6-27b`
-- **Polling interval:** 60 seconds (adjustable per machine in config)
+### Shim
+
+- `homelab-shim` is its own repo and a submodule of `homelab-assistant`
+- **Port:** 8765
+- **Transport:** FastAPI + uvicorn; endpoints `GET /state` and `GET /health`
+- **Schema enforcement:** shim payload modeled with Pydantic in `shim/schema.py`. Machines report `null` for unapplicable fields (GPU, llama.cpp)
+- **Disk collection:** garbage filesystems and duplicate devices filtered out/combined
+- **llama.cpp:** all available models, their statuses, and input modalities are reported
+- **Percentages:** all percentage fields range from 0 to 100, so a value of 0.5 would mean 0.5% not 50%
+
+### Orchestrator
+
+- **Shim polling interval:** 60 seconds (adjustable per machine in config)
 - **History retention:** 30 days (older rows pruned by a nightly cleanup job)
-- **Shim port:** TBD (choose something above 8000, document in config)
 - **Interface:** CLI first; web UI is stretch
 - **Alert delivery:** Local notification / log file first; ntfy.sh integration is stretch
-- **Shim port:** 8765 (chosen, was TBD)
-- **Shim transport:** FastAPI + uvicorn; endpoints `GET /state` and `GET /health`
-- **Schema enforcement:** shim payload modeled as Pydantic in `shim/schema.py` - the
-  JSON contract is validated, not just documented
-- **llama.cpp reporting:** shim reports both `models_available` (installed, via `/api/tags`)
-  and `models_loaded` (in memory, via `/api/ps`); `/api/tags` is the liveness signal so
-  `running` is reliable even when no model is loaded
-- **Disk collection:** pseudo/virtual filesystems and duplicate devices filtered out
-  (squashfs/overlay/tmpfs/9p, `/mnt/wsl`, `/snap`, `/var/lib/docker`) so `disk[0]` is
-  always a real volume
-- **M1 done (2026-06-24):** shim verified returning valid JSON on the WSL2 dev box
-  (`ilum`); gpu/llama.cpp degrade to null where absent. Next: deploy + test on rivendell
-  (see `NEXT_STEPS.md`)
+- **LLM for queries:** `LFM2.5-2.6B` (fast, sufficient for structured-data QA)
+- **LLMs for log analysis / complex queries:** `Qwen3.5-9B`, `Qwen3.8-27b`
+
+### Other
+
+- **LAN config:** `lan_addresses.py` is gitignored and can be recreated from `_lan_addresses_template.py`

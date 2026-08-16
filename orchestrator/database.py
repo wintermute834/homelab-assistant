@@ -24,24 +24,18 @@ class SnapshotDatabase:
 
     def __init__(self) -> None:
         self.connection = sqlite3.connect("snapshots.db", check_same_thread=False)
-        cursor = self.connection.cursor()
 
+        cursor = self.connection.cursor()
         cursor.execute(SNAPSHOTS)
 
 
-    def _commit(self) -> None:
-        self.connection.commit()
-
-
     def insert_snapshot(self, snapshot: Snapshot) -> None:
-        cursor = self.connection.cursor()
-
-        cursor.execute("INSERT INTO snapshots VALUES (?, ?, ?)", (
-            snapshot.hostname,
-            snapshot.utc_timestamp,
-            snapshot.model_dump_json()
-        ))
-        self._commit()
+        with self.connection:
+            self.connection.cursor().execute("INSERT INTO snapshots VALUES (?, ?, ?)", (
+                snapshot.hostname,
+                snapshot.utc_timestamp,
+                snapshot.model_dump_json()
+            ))
 
 
     def get_hostnames(self) -> list[str]:

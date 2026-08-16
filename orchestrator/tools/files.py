@@ -1,3 +1,8 @@
+"""
+Tools for file reading, creation, and manipulation.
+
+Not required for the base homelab-assistant project but could be useful for a coding assistand addition.
+"""
 
 import os
 from typing import Callable, Optional, Protocol
@@ -148,7 +153,7 @@ list_dir = Tool(**{
                 "properties": {
                     "dir_path": {
                         "type": "string",
-                        "description": "The directory to read. Defaults to the current directory \"./\" when unspecified."
+                        "description": "The relative path of the directory to list. Defaults to the current directory \"./\" when unspecified."
                     }
                 }
             }
@@ -166,7 +171,7 @@ read_file = Tool(**{
                 "properties": {
                     "file_path": {
                         "type": "string",
-                        "description": "The path of the file to read. Should include the file extension (such as .txt, .py, or .png)."
+                        "description": "The relative path of the file to read. Should include the file extension (such as .txt, .py, or .png)."
                     }
                 },
                 "required": [
@@ -182,12 +187,12 @@ create_file = Tool(**{
     "definition": {
         "function": {
             "name": "create_file",
-            "description": "Creates a file with the given path. Optionally writes contents into the created file.",
+            "description": "Creates a file. Optionally writes contents into the created file.",
             "parameters": {
                 "properties": {
                     "file_path": {
                         "type": "string",
-                        "description": "The path of the file to create. Should include the file extension (such as .txt, .py, or .png)."
+                        "description": "The relative path of the file to create. Should include the file extension (such as .txt, .py, or .png)."
                     },
                     "contents": {
                         "type": "string",
@@ -212,7 +217,7 @@ write_file = Tool(**{
                 "properties": {
                     "file_path": {
                         "type": "string",
-                        "description": "The path of the file to write to. Should include the file extension (such as .txt, .py, or .png)."
+                        "description": "The relative path of the file to write to. Should include the file extension (such as .txt, .py, or .png)."
                     },
                     "contents": {
                         "type": "string",
@@ -238,7 +243,7 @@ append_file = Tool(**{
                 "properties": {
                     "file_path": {
                         "type": "string",
-                        "description": "The path of the file to append to. Should include the file extension (such as .txt, .py, or .png)."
+                        "description": "The relative path of the file to append to. Should include the file extension (such as .txt, .py, or .png)."
                     },
                     "text": {
                         "type": "string",
@@ -259,12 +264,12 @@ replace_file = Tool(**{
     "definition": {
         "function": {
             "name": "replace_file",
-            "description": "Finds and replaces the given string with a new string in the specified file.",
+            "description": "Finds and replaces the given string with a new string in a file.",
             "parameters": {
                 "properties": {
                     "file_path": {
                         "type": "string",
-                        "description": "The path of the file to replace in. Should include the file extension (such as .txt, .py, or .png)."
+                        "description": "The relative path of the file to replace in. Should include the file extension (such as .txt, .py, or .png)."
                     },
                     "old_string": {
                         "type": "string",

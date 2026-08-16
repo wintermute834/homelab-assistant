@@ -1,8 +1,7 @@
 # Homelab Assistant
 
-A conversational agent that monitors a small fleet of home machines and answers
-natural-language questions about their state - CPU, memory, disk, GPU, running services
-- with history and threshold-based alerts.
+A conversational agent that monitors a small fleet of home machines and answers natural-language questions about their state
+CPU, memory, disk, GPU, running services, and (planned) threshold-based alerts.
 
 No model training involved: the project is about the engineering around an LLM -
 structured data contracts, safety constraints, state management, and the gap between
@@ -10,16 +9,15 @@ what an LLM *says* it can do and what it does reliably.
 
 ## How it works
 
-- **shim** - a stateless process on each machine. Serves current system state as one
-  JSON `Snapshot`. No history, no LLM; runs unmodified everywhere.
-- **orchestrator** (Mac Mini, not built yet) - polls every shim every 60 s into SQLite,
-  evaluates alert rules, and answers NL queries via llama.cpp running on the GPU host.
-
-```
- orchestrator (Mac Mini) ──poll 60s──> shim on each machine
-        │  SQLite history, alert rules
-        └──NL query──> llama.cpp (rivendell, RTX 5070 Ti)
-```
+- **shim** - A stateless process on each machine.
+  - Serves current system state as one JSON Snapshot conforming to schema.py.
+  - Lives in its own repo and is checked out as a git submodule at `shim/` and runs unmodified everywhere.
+- **orchestrator** - a daemon that polls every shim every 60 sec, stores
+  each snapshot in SQLite, and answers NL queries via llama.cpp running on the GPU
+  host (rivendell). The LLM fetches state with **tools** - latest snapshots per
+  machine, historical snapshots by hostname/time range, current UTC time - instead of
+  having state injected into the prompt. The live system prompt, model choice
+  (`LFM2.5-2.6B`), and tool wiring all live in `orchestrator/orchestrator.py`.
 
 ## Machines
 
@@ -31,34 +29,67 @@ registry). LAN addresses are kept out of the repo - see below.
 | Path | What it is |
 |---|---|
 | [project-homelab-assistant.md](project-homelab-assistant.md) | Full spec - capabilities, schema, alert design, milestones |
-| [machines.md](machines.md) | Canonical machine registry (hardware, roles, shim config) |
+| [machines.md](machines.md) | Canonical machine registry (hardware, roles) |
 | [NEXT_STEPS.md](NEXT_STEPS.md) | Current status and the next milestone's handoff |
-| [CLAUDE.md](CLAUDE.md) | Working notes / conventions for this repo |
-| [shim/](shim/) | The shim package - `schema.py`, `collectors.py`, `server.py` |
+| [CLAUDE.md](CLAUDE.md) | LLM working notes / conventions for this repo |
+| [shim/](shim/) | Git submodule - shim package (`schema.py`, `collectors.py`, `server.py`), own requirements |
+| [orchestrator/](orchestrator/) | Polling daemon, SQLite history, llama.cpp harness + tools, CLI |
 
-## Quick start (shim)
+## Quick start
+
+Use `uv` for easy Python version and package management
+
+### Shim (on each monitored machine)
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-# GPU host (rivendell) only, for GPU metrics:
-pip install pynvml
+# Clone repo
+git clone git@github.com:wintermute834/homelab-shim.git
+cd homelab-shim
 
-uvicorn shim.server:app --host 0.0.0.0 --port 8765 --log-level debug
+# Set up virtual environment
+uv venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
+# rivendell only, for GPU metrics:
+uv pip install pynvml
+
+# Run shim server and test
+uvicorn server:app --host 0.0.0.0 --port 8765
 curl -s http://localhost:8765/state | python3 -m json.tool
 ```
 
 Bind shims to the LAN only - never expose port 8765 to the internet.
 
+### Orchestrator
+
+```bash
+# Clone repo
+git clone git@github.com:wintermute834/homelab-assistant.git
+cd homelab-assistant
+
+# Set up virtual environment
+uv venv
+source .venv/bin/activate
+uv pip install -r orchestrator/requirements.txt
+
+# Get lan addresses
+mv _lan_addresses_template.py lan_addresses.py # then, fill in the real LAN IPs
+
+# Run orchestrator polling loop and chat CLI
+python -m orchestrator
+```
+
+Needs the `shim/` submodule checked out (`git submodule update --init`).
+`snapshots.db` is created on first run and collection runs in the background while the CLI handles the conversation.
+
 ## A note on `.lan_addresses.md`
 
-Private LAN addresses are deliberately **not** committed. They live in a gitignored
-`.lan_addresses.md` (recreate it locally from the template if you clone fresh).
-`machines.md` points there instead of listing addresses inline - this keeps network
-topology out of the repo as basic hygiene in case it's ever shared or made public.
+Private LAN addresses are deliberately **not** committed, they live in a gitignored `lan_addresses.py`.
+
+Rename or copy `_lan_addresses_template.py` to `lan_addresses.py` and fill in the real IPs.
+
+`machines.md` points there instead of listing addresses inline.
 
 ## Status
 
-M1 complete - shim built and verified on the dev box (`ilum`).
-M2 complete - shim tested and working on all 4 machines. llama.cpp registers only on rivendell
-
+See [NEXT_STEPS.md](NEXT_STEPS.md) for what has been completed and what is to come.

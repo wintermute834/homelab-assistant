@@ -1,11 +1,14 @@
+"""
+Miscellaneous tools.
+"""
 
 from datetime import datetime, timezone
 from typing import Optional
 
-from lan_addresses import LLAMA_URL
 
 from .files import *
 from ..harness import Harness, Tool
+from ..lan_addresses import LLAMA_URL
 
 
 
@@ -106,7 +109,7 @@ SUBAGENT_MODEL = "LFM2.5-2.6B"
 
 # Collection of all misc tools
 misc_tools = (
-    "get_datetime_utc",
-    "query_subagent"
+    get_datetime_utc,
+    query_subagent
 )
 

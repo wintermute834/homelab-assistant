@@ -1,3 +1,10 @@
+"""
+Tools for searching the internet and fetching url contents.
+
+Currently doesn't work, Google sees the queries as malicious/scrapers and doesn't return real results.
+
+Not used for the base homelab-assistant project but could be an addition of some sort.
+"""
 
 from typing import Iterable, Optional, cast
 

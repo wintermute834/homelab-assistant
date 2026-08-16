@@ -8,8 +8,6 @@ should summarize and link here rather than restate these details.
 > Each shim reports a `hostname` field; alert rules and the orchestrator key off it, so
 > the **canonical hostname** below must match what that machine's shim actually returns.
 
-Fields marked `_TODO_` are unconfirmed - fill in as you verify on the real machine.
-
 ---
 
 ## rivendell - primary compute / LLM host
@@ -23,14 +21,12 @@ Fields marked `_TODO_` are unconfirmed - fill in as you verify on the real machi
 | **RAM** | 32 GB |
 | **GPU** | NVIDIA GeForce RTX 5070 Ti, 16 GB |
 | **Disks** |CT2000P510SSD8 - 2 TB: NVMe layout |
-| **LAN address** | Check in local .lan_addresses.md file |
+| **LAN address** | Check in local [lan_addresses.py](orchestrator/lan_addresses.py) file |
 | **Shim port** | 8765 |
-| **Polling interval** | 60 s default (spec notes a shorter interval may be warranted when training jobs run) |
+| **Polling interval** | 60 sec default (spec notes a shorter interval may be warranted when training jobs run) |
 | **Runs / services** | llama.cpp - models: `LFM2.5-2.6B` (main), `Qwen3.5-9B` (log/code reasoning) |
-| **GPU metrics** | `pynvml` installed here **only** - lights up the `gpu` field |
-| **Shim deploy** | **Manual, by the user** - do not ssh/scp on their behalf. Steps in `NEXT_STEPS.md`. |
-| **Shim status** | M2 pending - deploy + verify `gpu`/`llama.cpp` populated |
-| **Notes** | Primary machine; hands-on control preferred. |
+| **GPU / llama.cpp** | `pynvml` installed here **only** - lights up the `gpu` field |
+| **Shim status** | Deployed as **systemd service**, restarts automatically; `gpu`/`llama.cpp` confirmed populated |
 
 ---
 
@@ -43,16 +39,14 @@ Fields marked `_TODO_` are unconfirmed - fill in as you verify on the real machi
 | **OS / platform** |  Ubuntu 20.04.6 LTS (GNU/Linux 5.15.0-181-generic x86_64) |
 | **CPU** | AMD A8-3800 APU with Radeon(tm) HD Graphics / 4 processors |
 | **RAM** | 16 GB |
-| **GPU** | Sumo [Radeon HD 6550D],  _TODO_ GB |
+| **GPU** | Sumo [Radeon HD 6550D] |
 | **Disks** | CT480BX200SSD1 - 500 GB: ATA layout |
-| **LAN address** | Check in local .lan_addresses.md file |
+| **LAN address** | Check in local [lan_addresses.py](orchestrator/lan_addresses.py) file |
 | **Shim port** |  8765 |
-| **Polling interval** | 60 s default (spec notes a shorter interval may be warranted when training jobs run) |
-| **Runs / services** |  _TODO_ |
-| **GPU metrics** | AMD integrated GPU - **not** covered by NVML/`pynvml` (NVIDIA-only), so the shim's `gpu` field degrades to `null`. CPU/mem/disk are the useful metrics here. (If GPU stats are ever wanted, they'd come from `radeontop`/sysfs, not pynvml - but this is an old TeraScale card, so low priority.) |
-| **Shim deploy** | **Manual, by the user** - do not ssh/scp on their behalf. Steps in `NEXT_STEPS.md`. |
-| **Shim status** | Not yet deployed |
-| **Notes** | Secondary machine;  |
+| **Polling interval** | 60 sec |
+| **Runs / services** | Santa picker server - maybe add a service check so assistant can report on its status |
+| **GPU / llama.cpp** | AMD integrated GPU - **not** covered by `pynvml` (If GPU stats are ever wanted, they'd come from `radeontop`/sysfs, not pynvml - but this is an old TeraScale card, so low priority.) |
+| **Shim status** | Deployed as **systemd service**, restarts automatically |
 
 ---
 
@@ -63,16 +57,15 @@ Fields marked `_TODO_` are unconfirmed - fill in as you verify on the real machi
 | **Canonical hostname** | `ChibaCity` |
 | **Role** | Orchestration node - polling daemon, SQLite history store, alert engine, query handler |
 | **OS / platform** | macOS (Mac Mini M2) |
-| **CPU** | Apple M2 |
+| **CPU** | Apple M2 / 8 processors |
 | **RAM** | 8 GB |
 | **Disks** |  APPLE SSD AP0256Z, 500 MB: NVMe layout |
-| **LAN address** | Check in local .lan_addresses.md file |
+| **LAN address** | Check in local [lan_addresses.py](orchestrator/lan_addresses.py) file |
 | **Shim port** | 8765 |
-| **Polling interval** | 60 s (polls itself + the others) |
-| **Runs / services** | Orchestrator daemon (not built yet) + its own shim |
-| **GPU / llama.cpp** | none - `gpu` and `services.llamacpp` report `null` |
-| **Shim status** | Not yet deployed |
-| **Notes** | The "brain"; everything else reports to it. |
+| **Polling interval** | 60 sec (polls itself + the others) |
+| **Runs** | Orchestrator daemon + its own shim (both need **manual activation**) |
+| **GPU / services** | none - `gpu` and `services.llamacpp` report `null` |
+| **Shim status** | deployed; needs **manual activation** (not a service yet - launchd blocked on sudo) |
 
 ---
 
@@ -85,23 +78,10 @@ Fields marked `_TODO_` are unconfirmed - fill in as you verify on the real machi
 | **OS / platform** | Windows 11 host; Claude Code + shim run under **WSL2 Ubuntu** |
 | **CPU** | Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz / 8 processors |
 | **RAM** | 64 GB |
-| **GPU** | Radeon RX 570 Series (8 GB) - collect what NVML exposes but don't rely on it; CPU/mem/disk are the useful metrics |
+| **GPU** | Radeon RX 570 Series (8 GB) - **not collected by pynvml** |
 | **Disks** | Samsung  SSD 980 PRO - 1 TB: NVMe layout |
-| **LAN address** | Check in local .lan_addresses.md file |
+| **LAN address** | Check in local [lan_addresses.py](orchestrator/lan_addresses.py) file |
 | **Shim port** | 8765 |
-| **Polling interval** | 60 s |
-| **Runs / services** | none monitored - `gpu` and `services.llama.cpp` report `null` |
-| **Shim status** | M1 verified here - `/state` returns schema-valid JSON |
-| **Gotchas** | Stock Python 3.12 had no pip/venv (needed `sudo apt install python3-venv python3-pip`). WSL pollutes `psutil.disk_partitions` with bind-mounts/overlays (some bogusly 100% full) - handled by the disk filter in the shim. |
-
----
-
-## Open questions to reconcile
-
-- **Hostname naming.** ✅ Canonical names set here: `rivendell`, `caladan`, `ChibaCity`
-  (the Mac Mini), `ilum` (the dev box). Still TODO: the spec's example system prompt
-  (`project-homelab-assistant.md`, ~lines 198-199) still says `mac-mini` / `windows-dev`
-  - update it (and any future alert config) to match these canonical names.
-- **LAN addresses.** ✅ Recorded in the local `.lan_addresses.md` (gitignored). Firewall:
-  port 8765 must still be reachable on the LAN for the Mac Mini to poll each machine.
-- **caladan TODOs.** GPU VRAM and `Runs / services` (the web apps) still unconfirmed.
+| **Polling interval** | 60 sec |
+| **GPU / services** | none - `gpu` and `services.llamacpp` report `null` |
+| **Shim status** | Not set up - box is not SSH-accessible right now |
